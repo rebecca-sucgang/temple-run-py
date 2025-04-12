@@ -121,7 +121,7 @@ game = Game()
 def onStep():
     game.update()
 
-def onDraw():
+def redrawAll(app):
     game.draw()
 
 def onKeyHold(keys):
