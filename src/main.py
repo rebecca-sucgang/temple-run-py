@@ -81,7 +81,6 @@ class Game:
         self.score += 1
 
     def draw(self):
-        clear('black')
 
         for i in range(20):
             d = i / 20
