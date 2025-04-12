@@ -1,2 +1,3 @@
 def foo():
-    return 42
+    print("This is my change to the foo function!")
+    return None
