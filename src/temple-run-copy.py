@@ -259,7 +259,7 @@ class Game:
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
 
-        elif self.leaderboard:
+        elif self.leaderboard: # pranav
             drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size=25, bold=True)
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')

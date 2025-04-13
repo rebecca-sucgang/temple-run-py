@@ -58,6 +58,7 @@ class Game:
     def reset(self):
         self.started = False
         self.tutorial = False
+        self.leaderboard = False
         self.over = False
         self.paused = False
         self.score = 0
@@ -74,6 +75,10 @@ class Game:
     def instructions(self):
         if not self.started:
             self.tutorial = True
+
+    def leadership(self):
+        if not self.started and not self.tutorial:
+            self.leaderboard = True
 
     def togglePause(self):
         if self.started and not self.over:
@@ -160,6 +165,12 @@ class Game:
 
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
+
+        elif self.leaderboard:
+            drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size = 25, bold = True)
+            drawRect(150, 340, 100, 40, fill = 'gray')
+            drawLabel('Back', 200, 360, size=20, fill = 'white')
+
         elif not self.started:
             drawRect(0, 0, 400, 400, fill="darkGreen")
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
@@ -168,6 +179,11 @@ class Game:
             
             drawRect(150, 260, 100, 40, fill='darkOrange')
             drawLabel('How to Play', 200, 280, size=15, fill='white')
+
+            drawRect(150, 320, 100, 40, fill='purple')
+            drawLabel('Leadership Board', 200, 340, size=12.5, fill='white')
+
+
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
@@ -205,6 +221,11 @@ def onMousePress(app, x, y):
         if 150 <= x <= 250 and 340 <= y <= 380:
             # Return to main menu
             app.game.tutorial = False
+
+    elif app.game.leaderboard: 
+        if 150 <= x <= 250 and 340 <= y <= 380:
+            # Return to main menu
+            app.game.leaderboard = False
     
     elif app.game.over:
         if 150 <= x <= 250 and 340 <= y <= 380:
@@ -217,6 +238,9 @@ def onMousePress(app, x, y):
 
         elif 150 <= x <= 250 and 260 <= y <= 300:
             app.game.instructions()
+
+        elif 150 <= x <= 250 and 320 <= y <= 360:
+            app.game.leadership()
 
 def redrawAll(app):
     app.game.draw()
