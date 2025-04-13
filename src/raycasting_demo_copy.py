@@ -249,7 +249,7 @@ class Game:
             drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
         else:
             # Draw road base
-            drawPolygon(150, 0, 250, 0, 400, 400, 0, 400, fill='gray')
+            drawPolygon(150, 0, 250, 0, 400, 400, 0, 400, fill='brown')
 
             # Draw road lines
             for line in self.roadLines:
