@@ -172,7 +172,6 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 
         elif not self.started:
-            drawRect(0, 0, 400, 400, fill="darkGreen")
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='blue')
             drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
