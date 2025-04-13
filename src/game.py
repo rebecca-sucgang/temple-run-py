@@ -59,6 +59,7 @@ class Game:
     def reset(self):
         self.started = False
         self.over = False
+        self.paused = False
         self.score = 0
         self.player = Player(200, 350, 15)
         self.coins = []
@@ -68,8 +69,12 @@ class Game:
         self.reset()
         self.started = True
 
+    def togglePause(self):
+        if self.started and not self.over:
+            self.paused = not self.paused
+
     def update(self):
-        if not self.started or self.over:
+        if not self.started or self.over or self.paused:
             return
 
         # Spawn coins and holes
@@ -113,6 +118,8 @@ class Game:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='green')
             drawLabel('Start', 200, 220, size=20, fill='white')
+        elif self.paused:
+            drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
             drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
         else:
@@ -134,6 +141,10 @@ def onKeyHold(app, keys):
         app.game.movePlayer('left')
     if 'right' in keys:
         app.game.movePlayer('right')
+
+def onKeyPress(app, key):
+    if key == 'p':
+        app.game.togglePause()
 
 def onMousePress(app, x, y):
     if not app.game.started:
