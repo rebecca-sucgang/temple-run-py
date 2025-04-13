@@ -53,7 +53,6 @@ class Hole:
 class Game:
     def __init__(self, app):
         self.app = app
-        self.backgroundImage = Image('templeruncavesquare.jpg', 0, 0, width=400, height=400)
         self.reset()
 
     def reset(self):
@@ -162,11 +161,6 @@ class Game:
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
         elif not self.started:
-<<<<<<< HEAD
-            drawImage(self.backgroundImage)
-=======
-            drawRect(0, 0, 400, 400, fill="darkGreen")
->>>>>>> b0e42eeec4609c75f9d98f07e580063c43df489d
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='blue')
             drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
