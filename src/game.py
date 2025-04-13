@@ -65,7 +65,7 @@ class Game:
         self.player = Player(200, 350, 15)
         self.coins = []
         self.hole = None  # Only one hole at a time
-        self.coinCooldown = 0
+        self.coinTimer = 0
 
     def start(self):
         self.reset()
@@ -87,13 +87,13 @@ class Game:
         self.speed = 5 + self.score // 10
 
         # Generate coins in vertical columns on the road
-        if self.coinCooldown <= 0:
+        if self.coinTimer <= 0:
             x = random.randint(100, 300)  
             for i in range(5):
                 self.coins.append(Coin(x, -i * 25))
-            self.coinCooldown = 40
+            self.coinTimer = 40
         else:
-            self.coinCooldown -= 1
+            self.coinTimer -= 1
 
         if self.hole is None and random.random() < 0.03:
             self.hole = Hole(random.randint(120, 240), 0)
@@ -161,11 +161,12 @@ class Game:
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
         elif not self.started:
+            drawRect(0, 0, 400, 400, fill="darkGreen")
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
-            drawRect(150, 200, 100, 40, fill='green')
-            drawLabel('Start', 200, 220, size=20, fill='white')
+            drawRect(150, 200, 100, 40, fill='blue')
+            drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
             
-            drawRect(150, 260, 100, 40, fill='orange')
+            drawRect(150, 260, 100, 40, fill='darkOrange')
             drawLabel('How to Play', 200, 280, size=15, fill='white')
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
