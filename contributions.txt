@@ -12,3 +12,7 @@ mdtaylor
  - Designed and coded the main game screen
  - ...
 ------------------------------------>
+
+Pranav Srinivas (pranavsr)
+- Designed the leadership board
+
