@@ -189,7 +189,8 @@ class Game:
         self.started = True
 
     def instructions(self):
-        self.tutorial = True
+        if not self.started:
+            self.tutorial = True
 
     def togglePause(self):
         if self.started and not self.over:
@@ -243,20 +244,23 @@ class Game:
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
 
     def draw(self):
-        if not self.started:
+        if self.tutorial:
+            drawLabel('How to Play', 200, 80, size=30, bold=True)
+            drawLabel('Move Left: Press the ← key', 200, 140, size=20)
+            drawLabel('Move Right: Press the → key', 200, 180, size=20)
+            drawLabel('Avoid the black holes.', 200, 220, size=20)
+            drawLabel('Collect the gold coins.', 200, 260, size=20)
+            drawLabel('Press P to pause.', 200, 300, size=20)
+
+            drawRect(150, 340, 100, 40, fill='gray')
+            drawLabel('Back', 200, 360, size=20, fill='white')
+        elif not self.started:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='green')
             drawLabel('Start', 200, 220, size=20, fill='white')
             
-            drawRect(150, 250, 100, 40, fill='orange')
-            drawLabel('How to Play', 200, 270, size=15, fill='white')
-        elif self.tutorial:
-            drawLabel('How to Play', 200, 80, size=30, bold=True)
-            drawLabel('Move Left: ← key', 200, 140, size=20)
-            drawLabel('Move Right: → key', 200, 180, size=20)
-            drawLabel('Avoid black holes.', 200, 220, size=20)
-            drawLabel('Collect gold coins.', 200, 260, size=20)
-            drawLabel('Press P to pause.', 200, 300, size=20)
+            drawRect(150, 260, 100, 40, fill='orange')
+            drawLabel('How to Play', 200, 280, size=15, fill='white')
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
@@ -295,11 +299,16 @@ def onKeyPress(app, key):
         app.game.togglePause()
 
 def onMousePress(app, x, y):
-    if not app.game.started:
+    if app.game.tutorial:
+        if 150 <= x <= 250 and 340 <= y <= 380:
+            # Return to main menu
+            app.game.tutorial = False
+    
+    elif not app.game.started:
         if 150 <= x <= 250 and 200 <= y <= 240:
             app.game.start()
 
-        if 150 <= x <= 250 and 200 <= y <= 270:
+        elif 150 <= x <= 250 and 260 <= y <= 300:
             app.game.instructions()
 
 def redrawAll(app):
