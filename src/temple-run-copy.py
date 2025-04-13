@@ -275,10 +275,6 @@ class Game:
             drawRect(150, 320, 100, 40, fill = 'purple')
             drawLabel('Leadership Board', 200, 340, size = 12.5, fill = 'white')
 
-
-         
-
-
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
