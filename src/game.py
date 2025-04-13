@@ -25,8 +25,8 @@ class Coin:
         self.y = y
         self.size = 10
 
-    def move(self):
-        self.y += 5
+    def move(self, speed):
+        self.y += speed
 
     def draw(self):
         drawCircle(self.x, self.y, self.size, fill='gold')
@@ -41,8 +41,8 @@ class Hole:
         self.w = 60
         self.h = 30
 
-    def move(self):
-        self.y += 5
+    def move(self, speed):
+        self.y += speed
 
     def draw(self):
         drawRect(self.x, self.y, self.w, self.h, fill='black')
@@ -61,6 +61,7 @@ class Game:
         self.over = False
         self.paused = False
         self.score = 0
+        self.speed = 5 # increased over time for diffuculty
         self.player = Player(200, 350, 15)
         self.coins = []
         self.hole = None  # Only one hole at a time
@@ -81,6 +82,10 @@ class Game:
     def update(self):
         if not self.started or self.over or self.paused:
             return
+        
+        # gradually increase speed over time
+        self.speed = 5 + self.score // 10
+
         # Generate coins in vertical columns on the road
         if self.coinCooldown <= 0:
             x = random.randint(100, 300)  
@@ -94,9 +99,9 @@ class Game:
             self.hole = Hole(random.randint(120, 240), 0)
 
         for coin in self.coins:
-            coin.move()
+            coin.move(self.speed)
         if self.hole:
-            self.hole.move()
+            self.hole.move(self.speed)
 
         playerBounds = self.player.getBounds()
 
