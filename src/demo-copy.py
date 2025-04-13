@@ -248,7 +248,7 @@ class Game:
             drawLabel('How to Play', 200, 80, size=30, bold=True)
             drawLabel('Move Left: Press the ← key', 200, 140, size=20)
             drawLabel('Move Right: Press the → key', 200, 180, size=20)
-            drawLabel('Avoid the black holes.', 200, 220, size=20)
+            drawLabel('Avoid the obstacles.', 200, 220, size=20)
             drawLabel('Collect the gold coins.', 200, 260, size=20)
             drawLabel('Press P to pause.', 200, 300, size=20)
 
@@ -265,6 +265,9 @@ class Game:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
             drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
+
+            drawRect(150, 340, 100, 40, fill='gray')
+            drawLabel('Start over', 200, 360, size=20, fill='white')
         else:
             # Draw road base
             drawPolygon(150, 0, 250, 0, 400, 400, 0, 400, fill='gray')
@@ -304,6 +307,11 @@ def onMousePress(app, x, y):
             # Return to main menu
             app.game.tutorial = False
     
+    elif app.game.over:
+        if 150 <= x <= 250 and 340 <= y <= 380:
+            # Return to main menu
+            app.game.started = not app.game.started
+
     elif not app.game.started:
         if 150 <= x <= 250 and 200 <= y <= 240:
             app.game.start()
