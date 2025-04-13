@@ -310,7 +310,7 @@ def onMousePress(app, x, y):
     elif app.game.over:
         if 150 <= x <= 250 and 340 <= y <= 380:
             # Return to main menu
-            app.game.started = not app.game.started
+            app.game.reset()
 
     elif not app.game.started:
         if 150 <= x <= 250 and 200 <= y <= 240:
