@@ -1,4 +1,3 @@
-
 # from cmu_graphics import *
 
 # class Segment:
@@ -177,7 +176,7 @@ class Game:
         self.started = False
         self.over = False
         self.tutorial = False
-        self.leadership = False # pranav
+        self.leaderboard = False # pranav
         self.paused = False
         self.score = 0
         self.player = Player(200, 350, 15)
@@ -195,7 +194,7 @@ class Game:
 
     def leadership(self): # pranav
         if not self.started and not self.tutorial:
-            self.leadership = True
+            self.leaderboard = True
 
     def togglePause(self):
         if self.started and not self.over:
@@ -260,9 +259,10 @@ class Game:
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
 
-        elif self.leadership:
+        elif self.leaderboard:
             drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size=25, bold=True)
             drawRect(150, 340, 100, 40, fill='gray')
+            drawLabel('Back', 200, 360, size=20, fill='white')
 
         elif not self.started:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
@@ -325,10 +325,10 @@ def onMousePress(app, x, y):
             # Return to main menu
             app.game.tutorial = False
 
-    elif app.game.leadership: # pranav
+    elif app.game.leaderboard: # pranav
         if 150 <= x <= 250 and 340 <= y <= 380:
             # Return to main menu
-            app.game.leadership = False
+            app.game.leaderboard = False
     
     elif app.game.over:
         if 150 <= x <= 250 and 340 <= y <= 380:
@@ -343,7 +343,7 @@ def onMousePress(app, x, y):
             app.game.instructions()
 
         elif 150 <= x <= 250 and 320 <= y <= 360: # pranav
-            app.game.leadership 
+            app.game.leadership() 
 
 def redrawAll(app):
     app.game.draw()
