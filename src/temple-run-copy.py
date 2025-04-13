@@ -177,6 +177,7 @@ class Game:
         self.started = False
         self.over = False
         self.tutorial = False
+        self.leadership = False # pranav
         self.paused = False
         self.score = 0
         self.player = Player(200, 350, 15)
@@ -261,6 +262,14 @@ class Game:
             
             drawRect(150, 260, 100, 40, fill='orange')
             drawLabel('How to Play', 200, 280, size=15, fill='white')
+
+            drawRect(150, 320, 100, 40, fill = 'purple')
+            drawLabel('Leadership Board', 200, 340, size = 12.5, fill = 'white')
+
+
+         
+
+
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
