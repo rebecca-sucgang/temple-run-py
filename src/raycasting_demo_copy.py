@@ -176,6 +176,7 @@ class Game:
     def reset(self):
         self.started = False
         self.over = False
+        self.tutorial = False
         self.paused = False
         self.score = 0
         self.player = Player(200, 350, 15)
@@ -186,6 +187,9 @@ class Game:
     def start(self):
         self.reset()
         self.started = True
+
+    def instructions(self):
+        self.tutorial = True
 
     def togglePause(self):
         if self.started and not self.over:
@@ -246,6 +250,13 @@ class Game:
             
             drawRect(150, 250, 100, 40, fill='orange')
             drawLabel('How to Play', 200, 270, size=15, fill='white')
+        elif self.tutorial:
+            drawLabel('How to Play', 200, 80, size=30, bold=True)
+            drawLabel('Move Left: ← key', 200, 140, size=20)
+            drawLabel('Move Right: → key', 200, 180, size=20)
+            drawLabel('Avoid black holes.', 200, 220, size=20)
+            drawLabel('Collect gold coins.', 200, 260, size=20)
+            drawLabel('Press P to pause.', 200, 300, size=20)
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
@@ -287,6 +298,9 @@ def onMousePress(app, x, y):
     if not app.game.started:
         if 150 <= x <= 250 and 200 <= y <= 240:
             app.game.start()
+
+        if 150 <= x <= 250 and 200 <= y <= 270:
+            app.game.instructions()
 
 def redrawAll(app):
     app.game.draw()
