@@ -243,7 +243,10 @@ class Game:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='green')
             drawLabel('Start', 200, 220, size=20, fill='white')
-            drawLabel('Press p to pause the game.', 200, 280, size=20)
+            
+            drawRect(150, 250, 100, 40, fill='orange')
+            drawLabel('How to Play', 200, 270, size=15, fill='white')
+            drawLabel('Press p to pause the game.', 200, 280, size=12)
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
