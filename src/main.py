@@ -1,6 +1,8 @@
 from cmu_graphics import *
 import random
 
+# from chatGPT
+
 screenWidth = 400
 screenHeight = 600
 laneOffsets = [-80, 0, 80]
