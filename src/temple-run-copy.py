@@ -193,6 +193,10 @@ class Game:
         if not self.started:
             self.tutorial = True
 
+    def leadership(self): # pranav
+        if not self.started and not self.tutorial:
+            self.leadership = True
+
     def togglePause(self):
         if self.started and not self.over:
             self.paused = not self.paused
@@ -255,6 +259,11 @@ class Game:
 
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
+
+        elif self.leadership:
+            drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size=25, bold=True)
+            drawRect(150, 340, 100, 40, fill='gray')
+
         elif not self.started:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
             drawRect(150, 200, 100, 40, fill='green')
@@ -315,6 +324,11 @@ def onMousePress(app, x, y):
         if 150 <= x <= 250 and 340 <= y <= 380:
             # Return to main menu
             app.game.tutorial = False
+
+    elif app.game.leadership: # pranav
+        if 150 <= x <= 250 and 340 <= y <= 380:
+            # Return to main menu
+            app.game.leadership = False
     
     elif app.game.over:
         if 150 <= x <= 250 and 340 <= y <= 380:
@@ -327,6 +341,9 @@ def onMousePress(app, x, y):
 
         elif 150 <= x <= 250 and 260 <= y <= 300:
             app.game.instructions()
+
+        elif 150 <= x <= 250 and 320 <= y <= 360: # pranav
+            app.game.leadership 
 
 def redrawAll(app):
     app.game.draw()
