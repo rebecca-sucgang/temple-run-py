@@ -8,4 +8,5 @@ make it clear where you use code that is partly or entirely not of your
 original design, and what the source is for that code.
 ------------------------------------>
 
-We used chatGPT as a TA and to guide us in debugging.  
+We used ChatGPT as a TA, to guide us in debugging.  
+We also researched into sprites 
