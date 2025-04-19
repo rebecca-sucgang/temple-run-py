@@ -1,3 +1,5 @@
+# have the maze generation algorithm
+
 from cmu_graphics import *
 import random
 
