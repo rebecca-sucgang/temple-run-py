@@ -1,57 +1,5 @@
 from cmu_graphics import *
 import random
-from PIL import Image as PILImage
-
-class Player:
-    def __init__(self, x, y, radius):
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.direction = 'up'  # 'up', 'down', 'left', 'right'
-
-        # Load player sprite (assuming a sprite for movement is available)
-        spriteSheet = PILImage.open('src/images/player_sprite.png')
-        frameCount = 4  # Assume 4 frames for animation (one for each direction)
-        frameWidth = spriteSheet.width // frameCount
-        frameHeight = spriteSheet.height
-
-        self.sprites = []
-        self.spriteIndex = 0
-        self.spriteTimer = 0
-
-        # Crop and resize sprite frames
-        for i in range(frameCount):
-            frame = spriteSheet.crop((i * frameWidth, 0, (i + 1) * frameWidth, frameHeight))
-            resizedFrame = frame.resize((40, 60))  # Adjust size for player sprite
-            self.sprites.append(CMUImage(resizedFrame))
-
-    def rotateLeft(self):
-        dirs = ['up', 'left', 'down', 'right']
-        self.direction = dirs[(dirs.index(self.direction) + 1) % 4]
-
-    def rotateRight(self):
-        dirs = ['up', 'right', 'down', 'left']
-        self.direction = dirs[(dirs.index(self.direction) + 1) % 4]
-
-    def move(self, maze):
-        d = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}
-        dr, dc = d[self.direction]
-        newR = self.y + dr
-        newC = self.x + dc
-        if 0 <= newR < maze.rows and 0 <= newC < maze.cols:
-            if maze.grid[newR][newC] == 0:
-                self.x, self.y = newC, newR
-
-    def draw(self):
-        if self.direction:
-            self.spriteTimer += 1
-            if self.spriteTimer >= 4:  # Lower -> faster animation
-                self.spriteIndex = (self.spriteIndex + 1) % len(self.sprites)
-                self.spriteTimer = 0
-        else:
-            self.spriteIndex = 0
-        
-        drawImage(self.sprites[self.spriteIndex], self.x * 20, self.y * 20)
 
 class Maze:
     def __init__(self, rows, cols):
@@ -66,46 +14,184 @@ class Maze:
     def generateMaze(self, row, col):
         self.visited[row][col] = True
         self.grid[row][col] = 0
-        directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
-        random.shuffle(directions)
+        
+        directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]  # Up, Down, Right, Left
+        random.shuffle(directions)  # Randomize directions to ensure random maze generation
+        
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
+            # Check if the new row and column are within bounds
             if 1 <= new_row < self.rows - 1 and 1 <= new_col < self.cols - 1:
                 if not self.visited[new_row][new_col]:
+                    # Carve a path by setting the intermediate cell between current and new position to 0
                     self.grid[row + dr // 2][col + dc // 2] = 0
+                    # Recursively generate maze from the new cell
                     self.generateMaze(new_row, new_col)
+
+    def isPath(self, row, col):
+        return self.grid[row][col] == 0
+
+
+class Player:
+    def __init__(self, row, col):
+        self.row = row
+        self.col = col
+        self.x = None
+        self.y = None
+        self.speed = 2
+        self.moveDirection = None
+        self.orientation = 'up'  # Track orientation for turning left or right
+
+    def updatePixelPosition(self, app):
+        w, h = getCellSize(app)
+        self.x = app.boardLeft + self.col * w + w / 2
+        self.y = app.boardTop + self.row * h + h / 2
+
+    def canMove(self, direction, maze):
+        delta = {
+            'up': (-1, 0),
+            'down': (1, 0),
+            'left': (0, -1),
+            'right': (0, 1)
+        }
+        drow, dcol = delta[direction]
+        newRow = self.row + drow
+        newCol = self.col + dcol
+
+        if (0 <= newRow < len(maze.grid) and 
+            0 <= newCol < len(maze.grid[0]) and 
+            maze.grid[newRow][newCol] == 0):
+            return True
+        return False
+
+    def moveStep(self, app):
+        if not self.moveDirection: return
+
+        w, h = getCellSize(app)
+        dx = dy = 0
+        if self.moveDirection == 'up':
+            dy = -self.speed
+        elif self.moveDirection == 'down':
+            dy = self.speed
+        elif self.moveDirection == 'left':
+            dx = -self.speed
+        elif self.moveDirection == 'right':
+            dx = self.speed
+
+        # Distance to center of next cell
+        targetRow = self.row
+        targetCol = self.col
+        if self.moveDirection == 'up': targetRow -= 1
+        if self.moveDirection == 'down': targetRow += 1
+        if self.moveDirection == 'left': targetCol -= 1
+        if self.moveDirection == 'right': targetCol += 1
+
+        if not self.canMove(self.moveDirection, app.maze):
+            return
+
+        tx = app.boardLeft + targetCol * w + w / 2
+        ty = app.boardTop + targetRow * h + h / 2
+
+        if ((dx != 0 and abs(self.x + dx - tx) < self.speed) or
+            (dy != 0 and abs(self.y + dy - ty) < self.speed)):
+            self.row = targetRow
+            self.col = targetCol
+            self.updatePixelPosition(app)
+        else:
+            self.x += dx
+            self.y += dy
+
+    def turnLeft(self):
+        if self.orientation == 'up':
+            self.orientation = 'left'
+        elif self.orientation == 'down':
+            self.orientation = 'right'
+        elif self.orientation == 'left':
+            self.orientation = 'down'
+        elif self.orientation == 'right':
+            self.orientation = 'up'
+
+    def turnRight(self):
+        if self.orientation == 'up':
+            self.orientation = 'right'
+        elif self.orientation == 'down':
+            self.orientation = 'left'
+        elif self.orientation == 'left':
+            self.orientation = 'up'
+        elif self.orientation == 'right':
+            self.orientation = 'down'
+
 
 def onAppStart(app):
     app.rows = 21
     app.cols = 21
+    app.boardLeft = 50
+    app.boardTop = 50
+    app.boardWidth = 400
+    app.boardHeight = 400
+    app.cellBorderWidth = 1
+
     app.maze = Maze(app.rows, app.cols)
-    app.player = Player(1, 1, 15)
+    app.player = Player(*app.maze.start)
+    app.player.updatePixelPosition(app)
 
 def redrawAll(app):
-    drawRect(0, 0, 500, 500, fill='darkGreen')
-    drawLabel('Maze Game (WASD + R)', 250, 20, size=14)
-    drawMazeView(app)
+    drawLabel('Maze Game (Arrow keys to move, r to regenerate)', 250, 30, size=16)
+    drawMaze(app)
+    drawPlayer(app)
 
-def drawMazeView(app):
-    # Draw maze walls and the player in 2D perspective
-    for row in range(app.maze.rows):
-        for col in range(app.maze.cols):
-            if app.maze.grid[row][col] == 1:
-                drawRect(col * 20, row * 20, 20, 20, fill='black')
+def drawMaze(app):
+    for row in range(app.rows):
+        for col in range(app.cols):
+            x, y = getCellLeftTop(app, row, col)
+            w, h = getCellSize(app)
 
-    app.player.draw()
+            if (row, col) == app.maze.start:
+                color = 'lightgreen'
+            elif (row, col) == app.maze.end:
+                color = 'gold'
+            else:
+                color = 'black' if app.maze.grid[row][col] == 1 else 'white'
+
+            drawRect(x, y, w, h, fill=color, border='gray', borderWidth=app.cellBorderWidth)
+
+def drawPlayer(app):
+    r = min(getCellSize(app)) // 3
+    drawCircle(app.player.x, app.player.y, r, fill='red')
 
 def onKeyPress(app, key):
     if key == 'r':
         onAppStart(app)
-    elif key == 'a':
-        app.player.rotateLeft()
-    elif key == 'd':
-        app.player.rotateRight()
-    elif key == 'w':
-        app.player.move(app.maze)
-    elif key == 's':
-        app.player.move(app.maze)
+
+def onKeyHold(app, keys):
+    for direction in ['up', 'down']:
+        if direction in keys:
+            app.player.moveDirection = direction
+            return
+    app.player.moveDirection = None
+
+def onKeyPress(app, key):
+    if key == 'Left':
+        app.player.turnLeft()
+    elif key == 'Right':
+        app.player.turnRight()
+
+#---------------------- Smooth Movement ----------------------#
+
+def onStep(app):
+    app.player.moveStep(app)
+
+def getCellSize(app):
+    return (app.boardWidth / app.cols, app.boardHeight / app.rows)
+
+def getCellLeftTop(app, row, col):
+    cellWidth, cellHeight = getCellSize(app)
+    return app.boardLeft + col * cellWidth, app.boardTop + row * cellHeight
+
+def getCellCenter(app, row, col):
+    x, y = getCellLeftTop(app, row, col)
+    w, h = getCellSize(app)
+    return x + w/2, y + h/2
 
 def main():
     runApp(width=500, height=500)
