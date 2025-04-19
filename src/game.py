@@ -1,5 +1,6 @@
 from cmu_graphics import *
 import random
+from PIL import Image as PILImage
 
 class Player:
     def __init__(self, x, y, radius):
@@ -187,8 +188,8 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 
         elif not self.started:
-            drawLabel('Temple Run', 200, 150, size=40, bold=True)
-            drawRect(150, 200, 100, 40, fill='blue')
+            drawImage(self.app.startBackground, 0,0)
+            drawRect(150, 200, 100, 40, fill='gold')
             drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
             
             drawRect(150, 260, 100, 40, fill='darkOrange')
@@ -216,6 +217,7 @@ class Game:
 
 def onAppStart(app):
     app.game = Game(app)
+    app.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
 
 def onStep(app):
     app.game.update()
