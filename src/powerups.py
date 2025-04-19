@@ -1,70 +1,8 @@
-from cmu_graphics import *
-import random
-
+# this was done by rebecca
 # --- this is the magnet powerup ---
-class Magnet:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.r = 12
-
-    # keep track of how long the magnet is active
-    def move(self, speed):
-        self.y += speed
-    
-    def draw(self):
-        drawCircle(self.x, self.y, self.r, fill='red')
-    
-    def getBounds(self):
-        return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
-    
-class Game:
-    def __init__(self, app):
-        pass
-
-    def reset(self):
-        self.magnets = []
-        self.magnetTimer = 200
-        self.magnetActive = False
-        self.magnetDuration = 0
-
-    def update(self):
-        if self.magnetTimer <= 0:
-            x = random.randint(100, 300) 
-            self.magnets.append(Magnet(x, 0))
-            self.magnetTimer = 400
-        else:
-            self.magnetTimer -= 1
-        
-        # move the magnets down
-        for magnet in self.magnets:
-            magnet.move(self.speed)
-
-        # if magnet has been collected
-        updatedMagnets = []
-        for magnet in self.magnets:
-            if self.checkCollision(self.player.getBounds()):
-                self.magnetActive = True
-                self.magnetDuration = 300
-            elif magnet.y < 400:
-                updatedMagnets.append(magnet)
-
-        self.magnets = updatedMagnets
-        
-        # decrease magnet power-up time
-        if self.magnetActive:
-            self.magnetDuration -= 1
-             
-            updatedCoins = []
-            for coin in self.coins:
-                dx = self.player.x - coin.x
-
-            if self.magnetDuration <= 0:
-                self.magnetActive = False
-
-
 from cmu_graphics import *
 import random
+from PIL import Image as PILImage
 
 class Player:
     def __init__(self, x, y, radius):
@@ -245,7 +183,6 @@ class Game:
             drawLabel('Avoid the obstacles.', 200, 220, size=20)
             drawLabel('Collect the gold coins.', 200, 260, size=20)
             drawLabel('Press P to pause.', 200, 300, size=20)
-
             drawRect(150, 340, 100, 40, fill='gray')
             drawLabel('Back', 200, 360, size=20, fill='white')
 
@@ -256,8 +193,8 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 
         elif not self.started:
-            drawLabel('Temple Run', 200, 150, size=40, bold=True)
-            drawRect(150, 200, 100, 40, fill='blue')
+            drawImage(self.app.startBackground, 0,0)
+            drawRect(150, 200, 100, 40, fill='gold')
             drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
             
             drawRect(150, 260, 100, 40, fill='darkOrange')
@@ -270,6 +207,7 @@ class Game:
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
+            
             drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
 
             drawRect(150, 340, 100, 40, fill='gray')
@@ -285,6 +223,7 @@ class Game:
 
 def onAppStart(app):
     app.game = Game(app)
+    app.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
 
 def onStep(app):
     app.game.update()
@@ -332,3 +271,65 @@ def main():
     runApp()
 
 main()
+
+# class Magnet:
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
+#         self.r = 12
+
+#     # keep track of how long the magnet is active
+#     def move(self, speed):
+#         self.y += speed
+    
+#     def draw(self):
+#         drawCircle(self.x, self.y, self.r, fill='red')
+    
+#     def getBounds(self):
+#         return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+    
+# class Game:
+#     def __init__(self, app):
+#         pass
+
+#     def reset(self):
+#         self.magnets = []
+#         self.magnetTimer = 200
+#         self.magnetActive = False
+#         self.magnetDuration = 0
+
+#     def update(self):
+#         if self.magnetTimer <= 0:
+#             x = random.randint(100, 300) 
+#             self.magnets.append(Magnet(x, 0))
+#             self.magnetTimer = 400
+#         else:
+#             self.magnetTimer -= 1
+        
+#         # move the magnets down
+#         for magnet in self.magnets:
+#             magnet.move(self.speed)
+
+#         # if magnet has been collected
+#         updatedMagnets = []
+#         for magnet in self.magnets:
+#             if self.checkCollision(self.player.getBounds()):
+#                 self.magnetActive = True
+#                 self.magnetDuration = 300
+#             elif magnet.y < 400:
+#                 updatedMagnets.append(magnet)
+
+#         self.magnets = updatedMagnets
+        
+#         # decrease magnet power-up time
+#         if self.magnetActive:
+#             self.magnetDuration -= 1
+             
+#             updatedCoins = []
+#             for coin in self.coins:
+#                 dx = self.player.x - coin.x
+
+#             if self.magnetDuration <= 0:
+#                 self.magnetActive = False
+
+
