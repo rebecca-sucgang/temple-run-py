@@ -54,12 +54,13 @@ class Hole:
 class Game:
     def __init__(self, app):
         self.app = app
-        self.coins = []
+        self.scoreList = []
         self.reset()
 
     def reset(self):
         self.started = False
         self.tutorial = False
+        self.coins=[]
         self.leaderboard = False
         self.over = False
         self.paused = False
@@ -131,7 +132,7 @@ class Game:
         if self.hole:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
-                #self.coins.append(self.score)
+                self.scoreList.append(self.score) # pranav added this
 
             elif self.hole.y > 400:
                 self.hole = None
@@ -149,14 +150,17 @@ class Game:
         bx1, by1, bx2, by2 = b
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
     
-    # def returnScore(self):  # pranav added this function
-    #     if self.coins == []:
-    #         return None
-    #     else:
-    #         print("returning")
-    #         print(self.coins)
-    #         print(sorted(self.coins))
-    #         return sorted(self.coins)[-1]
+    def returnMaxScore(self):  # pranav added this function
+        if self.scoreList == []:
+            return None
+        else:
+            return sorted(self.scoreList)[-1]
+        
+    def returnRecentScore(self): # pranav added this function
+        if self.scoreList == []:
+            return None
+        else:
+            return (self.scoreList)[-1]
             
 
 
@@ -181,8 +185,8 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill='white')
 
         elif self.leaderboard: # pranav
-            #drawLabel(f'Coins collected in most recent run : {self.returnScore()}', 100, 70, size = 25, bold = True)
-            drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size = 25, bold = True)
+            drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 200, 120, size = 20, bold = True)
+            drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 200, 80, size = 20, bold = True)
             drawRect(150, 340, 100, 40, fill = 'gray')
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 

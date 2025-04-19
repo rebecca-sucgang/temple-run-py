@@ -16,6 +16,8 @@ mdtaylor
 Pranav Srinivas (pranavsr)
 - Designed the leadership board
 - Worked on 2.5D Graphics
+- Storyboarded
+
 
 Indu Arimilli (iarimill)
 - Wrote game.py code (all the classes)
