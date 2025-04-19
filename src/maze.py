@@ -34,7 +34,7 @@ class Maze:
         return self.grid[row][col] == 0
 
 
-class Player:
+class MazePlayer:
     def __init__(self, row, col):
         self.row = row
         self.col = col
@@ -112,7 +112,7 @@ def onAppStart(app):
     app.cellBorderWidth = 1
 
     app.maze = Maze(app.rows, app.cols)
-    app.player = Player(*app.maze.start)
+    app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
 
 def redrawAll(app):
@@ -149,8 +149,6 @@ def onKeyHold(app, keys):
             app.player.moveDirection = direction
             return
     app.player.moveDirection = None
-
-#---------------------- Smooth Movement ----------------------#
 
 def onStep(app):
     app.player.moveStep(app)

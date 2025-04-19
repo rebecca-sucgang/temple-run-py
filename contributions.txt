@@ -32,4 +32,3 @@ Rebecca Sucgang (rsucgang)
 - Helped debug code to make the code run like temple run
 - Worked on 2.5D Graphics
 - Storyboarded/Made prototypes
-- Worked on the overall UI for Temple Run (backgrounds, buttons, etc.)
