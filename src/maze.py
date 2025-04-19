@@ -1,3 +1,5 @@
+# original maze code
+
 from cmu_graphics import *
 import random
 
@@ -23,7 +25,7 @@ class Maze:
             # Check if the new row and column are within bounds
             if 1 <= new_row < self.rows - 1 and 1 <= new_col < self.cols - 1:
                 if not self.visited[new_row][new_col]:
-                    # Carve a path by setting the cell between current and new position to 0
+                    # Carve a path by setting the intermediate cell between current and new position to 0
                     self.grid[row + dr // 2][col + dc // 2] = 0
                     # Recursively generate maze from the new cell
                     self.generateMaze(new_row, new_col)
