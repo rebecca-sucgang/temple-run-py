@@ -8,14 +8,41 @@ class Player:
         self.y = y
         self.r = radius
 
+        # loads the player sprite, by rebecca
+        spriteSheet = PILImage.open('src/images/topdownrunning.png')
+        frameCount = 8
+        frameWidth = spriteSheet.width
+        frameHeight = spriteSheet.height // frameCount
+
+        self.sprites = []
+        self.spriteIndex = 0
+        self.spriteTimer = 0
+        self.direction = None 
+
+        # used chatgpt to crop the sprite frames
+        for i in range(frameCount):
+            frame = spriteSheet.crop((0, i * frameHeight, frameWidth, (i + 1) * frameHeight))
+            resizedFrame = frame.resize((40, 60))  # Adjust size for player sprite
+            self.sprites.append(CMUImage(resizedFrame))
+
     def move(self, direction):
+        self.direction = direction
         if direction == 'left' and self.x - self.r > 100:
             self.x -= 5
         elif direction == 'right' and self.x + self.r < 300:
             self.x += 5
 
     def draw(self):
-        drawCircle(self.x, self.y, self.r, fill='lightblue')
+        # drawCircle(self.x, self.y, self.r, fill='lightblue')
+        if self.direction:
+            self.spriteTimer += 1
+            if self.spriteTimer >= 4: # lower -> faster animation
+                self.spriteIndex = (self.spriteIndex +1) % len(self.sprites)
+                self.spriteTimer = 0
+        else:
+            self.spriteIndex = 0
+        
+        drawImage(self.sprites[self.spriteIndex], self.x - 20, self.y - 30)
 
     def getBounds(self):
         return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
@@ -24,14 +51,15 @@ class Coin:
     def __init__(self, x, y): 
         self.x = x
         self.y = y
-        self.size = 10
+        self.size = 20
+        self.coinImages = CMUImage(PILImage.open('src/images/classiccoin.png').resize((self.size, self.size)))
         #self.coins = [] # pranav added this self.coins
 
     def move(self, speed):
         self.y += speed
 
     def draw(self):
-        drawCircle(self.x, self.y, self.size, fill='gold')
+        drawImage(self.coinImages, self.x, self.y)
 
     def getBounds(self):
         return (self.x - self.size, self.y - self.size, self.x + self.size, self.y + self.size)
@@ -56,6 +84,15 @@ class Game:
     def __init__(self, app):
         self.app = app
         self.coins = []
+        # backgrounds added by rebecca
+        self.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
+        self.forestBackground = CMUImage(PILImage.open('src/images/forestbackground.jpg').resize((400, 400)))
+        self.mossyBricksBackground = CMUImage(PILImage.open('src/images/mossybricks.jpg').resize((400, 400)))
+        # buttons by rebecca
+        self.startButton = CMUImage(PILImage.open('src/images/buttons/start.png'))
+        self.howToPlayButton = CMUImage(PILImage.open('src/images/buttons/howtoplay.png'))
+        self.leaderboardButton = CMUImage(PILImage.open('src/images/buttons/leaderboard.png'))
+
         self.reset()
 
     def reset(self):
@@ -69,6 +106,8 @@ class Game:
         self.player = Player(200, 350, 15)
         self.hole = None  # Only one hole at a time
         self.coinTimer = 0
+        self.roadOffset = 0 # vertical scroll for road
+        self.roadSpeed = 2
 
     def start(self):
         self.reset()
@@ -92,6 +131,10 @@ class Game:
         
         # gradually increase speed over time
         self.speed = 5 + self.score // 10
+        # Scroll the road
+        self.roadOffset += self.roadSpeed
+        if self.roadOffset >= 20:
+            self.roadOffset -= 20
 
         # Generate coins in vertical columns on the road
         if self.coinTimer <= 0:
@@ -159,15 +202,13 @@ class Game:
     #         print(sorted(self.coins))
     #         return sorted(self.coins)[-1]
             
-
-
     def drawRoadBackground(self):
-        drawRect(0, 0, 400, 400, fill='darkGreen')
+        drawImage(self.forestBackground, 0, 0)
         # Used ChatGPT to generate road background - after Hack112, I will do it myself
-        for y in range(0, 400, 20):
+        for y in range(-40, 400, 20):
             offset = 10 if (y // 20) % 2 == 0 else 0
             for x in range(100 + offset, 300, 20):
-                drawRect(x, y, 20, 20, fill='sienna', border='black', borderWidth=1)
+                drawRect(x, y + self.roadOffset, 20, 20, fill='sienna', border='black', borderWidth=1)
 
     def draw(self):
         if self.tutorial:
@@ -188,20 +229,24 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 
         elif not self.started:
-            drawImage(self.app.startBackground, 0,0)
-            drawRect(150, 200, 100, 40, fill='gold')
-            drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
+            drawImage(self.startBackground, 0,0)
+            # drawRect(150, 200, 100, 40, fill='gold')
+            # drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
+            drawImage(self.startButton, 155, 210)
             
-            drawRect(150, 260, 100, 40, fill='darkOrange')
-            drawLabel('How to Play', 200, 280, size=15, fill='white')
+            # drawRect(150, 260, 100, 40, fill='darkOrange')
+            # drawLabel('How to Play', 200, 280, size=15, fill='white')
+            drawImage(self.howToPlayButton, 155, 270)
 
-            drawRect(150, 320, 100, 40, fill='purple')
-            drawLabel('Leadership Board', 200, 340, size=12.5, fill='white')
+            # drawRect(150, 320, 100, 40, fill='purple')
+            # drawLabel('Leaderboard', 200, 340, size=15, fill='white')
+            drawImage(self.leaderboardButton, 155, 330)
 
 
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         elif self.over:
+            drawImage(self.mossyBricksBackground, 0,0)
             drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
 
             drawRect(150, 340, 100, 40, fill='gray')
@@ -217,7 +262,6 @@ class Game:
 
 def onAppStart(app):
     app.game = Game(app)
-    app.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
 
 def onStep(app):
     app.game.update()
@@ -228,9 +272,9 @@ def onKeyHold(app, keys):
     if 'right' in keys:
         app.game.movePlayer('right')
 
-def onKeyPress(app, key):
-    if key == 'p':
-        app.game.togglePause()
+# def onKeyPress(app, key):
+#     if key == 'p':
+#         app.game.togglePause()
 
 def onMousePress(app, x, y):
     if app.game.tutorial:
@@ -249,13 +293,13 @@ def onMousePress(app, x, y):
             app.game.reset()
 
     elif not app.game.started:
-        if 150 <= x <= 250 and 200 <= y <= 240:
+        if 155 <= x <= 255 and 210 <= y <= 245:
             app.game.start()
 
-        elif 150 <= x <= 250 and 260 <= y <= 300:
+        elif 155 <= x <= 255 and 260 <= y <= 300:
             app.game.instructions()
 
-        elif 150 <= x <= 250 and 320 <= y <= 360:
+        elif 155 <= x <= 255 and 320 <= y <= 360:
             app.game.leadership()
 
 def redrawAll(app):
