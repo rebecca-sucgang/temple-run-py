@@ -8,41 +8,15 @@ class Player:
         self.y = y
         self.r = radius
 
-        # loads the player sprite, by rebecca
-        spriteSheet = PILImage.open('src/images/topdownrunning.png')
-        frameCount = 8
-        frameWidth = spriteSheet.width
-        frameHeight = spriteSheet.height // frameCount
-
-        self.sprites = []
-        self.spriteIndex = 0
-        self.spriteTimer = 0
-        self.direction = None 
-
-        # used chatgpt to crop the sprite frames
-        for i in range(frameCount):
-            frame = spriteSheet.crop((0, i * frameHeight, frameWidth, (i + 1) * frameHeight))
-            resizedFrame = frame.resize((40, 60))  # Adjust size for player sprite
-            self.sprites.append(CMUImage(resizedFrame))
-
     def move(self, direction):
         self.direction = direction
-        if direction == 'left' and self.x - self.r > 100:
+        if direction == 'left' and self.x - self.r > 150:
             self.x -= 5
-        elif direction == 'right' and self.x + self.r < 300:
+        elif direction == 'right' and self.x + self.r < 350:
             self.x += 5
 
     def draw(self):
-        # drawCircle(self.x, self.y, self.r, fill='lightblue')
-        if self.direction:
-            self.spriteTimer += 1
-            if self.spriteTimer >= 4: # lower -> faster animation
-                self.spriteIndex = (self.spriteIndex +1) % len(self.sprites)
-                self.spriteTimer = 0
-        else:
-            self.spriteIndex = 0
-        
-        drawImage(self.sprites[self.spriteIndex], self.x - 20, self.y - 30)
+        drawCircle(self.x, self.y, self.r, fill='lightblue')
 
     def getBounds(self):
         return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
@@ -83,20 +57,30 @@ class Hole:
 class Game:
     def __init__(self, app):
         self.app = app
+        self.scoreList = []
         self.coins = []
+
         # backgrounds added by rebecca
-        self.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
-        self.forestBackground = CMUImage(PILImage.open('src/images/forestbackground.jpg').resize((400, 400)))
-        self.mossyBricksBackground = CMUImage(PILImage.open('src/images/mossybricks.jpg').resize((400, 400)))
+        self.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((500, 500)))
+        self.tutorialBackground = CMUImage(PILImage.open('src/images/tutorial.png').resize((500, 500)))
+        self.forestBackground = CMUImage(PILImage.open('src/images/forestbackground.jpg').resize((500, 500)))
+        self.gameOverBackground = CMUImage(PILImage.open('src/images/gameover.png').resize((500, 500)))
         # buttons by rebecca
         self.startButton = CMUImage(PILImage.open('src/images/buttons/start.png'))
         self.howToPlayButton = CMUImage(PILImage.open('src/images/buttons/howtoplay.png'))
+        self.backButton = CMUImage(PILImage.open('src/images/buttons/back.png'))
+
+        self.normalModeButton = CMUImage(PILImage.open('src/images/buttons/normalmode.png'))
+        self.mazeModeButton = CMUImage(PILImage.open('src/images/buttons/mazemode.png'))
+
         self.leaderboardButton = CMUImage(PILImage.open('src/images/buttons/leaderboard.png'))
+        self.startOverButton = CMUImage(PILImage.open('src/images/buttons/startover.png'))
 
         self.reset()
 
     def reset(self):
         self.started = False
+        self.selectingMode = False
         self.tutorial = False
         self.leaderboard = False
         self.over = False
@@ -138,7 +122,7 @@ class Game:
 
         # Generate coins in vertical columns on the road
         if self.coinTimer <= 0:
-            x = random.randint(100, 300)  
+            x = random.randint(150, 350)  
             for i in range(5):
                 self.coins.append(Coin(x, -i * 25))
             self.coinTimer = 40
@@ -146,7 +130,7 @@ class Game:
             self.coinTimer -= 1
 
         if self.hole is None and random.random() < 0.03:
-            self.hole = Hole(random.randint(120, 240), 0)
+            self.hole = Hole(random.randint(170, 310), 0)
 
         for coin in self.coins:
             coin.move(self.speed)
@@ -155,29 +139,29 @@ class Game:
 
         playerBounds = self.player.getBounds()
 
-        # Check is player got coins
+        # Check if player got coins
         updatedCoins = []
         for coin in self.coins:
             if self.checkCollision(playerBounds, coin.getBounds()):
-                self.incrementScore(coin)  
+                self.incrementScore(coin)
             else:
-                updatedCoins.append(coin) 
+                updatedCoins.append(coin)
 
         # Remove coins that have gone off the screen 
         validCoins = []
         for coin in updatedCoins:
-            if coin.y < 400: # 400 is screen width 
-                validCoins.append(coin)  
-        #Adds coin to validCoins list
+            if coin.y < 500: # 500 is screen width 
+                validCoins.append(coin)
+        # Adds coin to validCoins list
         self.coins[:] = validCoins  
 
-        # Sprite falls in hole
+        # player falls in hole
         if self.hole:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
-                #self.coins.append(self.score)
+                self.scoreList.append(self.score)
 
-            elif self.hole.y > 400:
+            elif self.hole.y > 500:
                 self.hole = None
 
     def incrementScore(self, coin):
@@ -193,64 +177,58 @@ class Game:
         bx1, by1, bx2, by2 = b
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
     
-    # def returnScore(self):  # pranav added this function
-    #     if self.coins == []:
-    #         return None
-    #     else:
-    #         print("returning")
-    #         print(self.coins)
-    #         print(sorted(self.coins))
-    #         return sorted(self.coins)[-1]
+    def returnMaxScore(self):  # pranav added this function
+        if self.scoreList == []:
+            return None
+        else:
+            return max(self.scoreList)
+        
+    def returnRecentScore(self): # pranav added this function
+        if self.scoreList == []:
+            return None
+        else:
+            return (self.scoreList)[-1]
             
     def drawRoadBackground(self):
         drawImage(self.forestBackground, 0, 0)
         # Used ChatGPT to generate road background - after Hack112, I will do it myself
-        for y in range(-40, 400, 20):
+        for y in range(-40, 500, 20):
             offset = 10 if (y // 20) % 2 == 0 else 0
-            for x in range(100 + offset, 300, 20):
+            for x in range(150 + offset, 350, 20):
                 drawRect(x, y + self.roadOffset, 20, 20, fill='sienna', border='black', borderWidth=1)
 
     def draw(self):
         if self.tutorial:
-            drawLabel('How to Play', 200, 80, size=30, bold=True)
-            drawLabel('Move Left: Press the ← key', 200, 140, size=20)
-            drawLabel('Move Right: Press the → key', 200, 180, size=20)
-            drawLabel('Avoid the obstacles.', 200, 220, size=20)
-            drawLabel('Collect the gold coins.', 200, 260, size=20)
-            drawLabel('Press P to pause.', 200, 300, size=20)
+            drawImage(self.tutorialBackground, 0, 0)
+            drawImage(self.backButton, 200, 375)
 
-            drawRect(150, 340, 100, 40, fill='gray')
-            drawLabel('Back', 200, 360, size=20, fill='white')
+        elif self.selectingMode:
+            drawImage(self.startBackground, 0,0)
+            drawImage(self.normalModeButton, 200, 310)
+            drawImage(self.mazeModeButton, 200, 390)
 
         elif self.leaderboard: # pranav
             #drawLabel(f'Coins collected in most recent run : {self.returnScore()}', 100, 70, size = 25, bold = True)
-            drawLabel(f'Maximum coins collected : {self.score}', 200, 80, size = 25, bold = True)
-            drawRect(150, 340, 100, 40, fill = 'gray')
+            drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 250, 120, size=20, bold=True)
+            drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 250, 80, size=20, bold=True)
+            drawRect(200, 390, 100, 40, fill = 'gray')
             drawLabel('Back', 200, 360, size=20, fill = 'white')
 
         elif not self.started:
             drawImage(self.startBackground, 0,0)
-            # drawRect(150, 200, 100, 40, fill='gold')
-            # drawLabel('Start', 200, 220, size=20, fill='white', bold=True)
-            drawImage(self.startButton, 155, 210)
-            
-            # drawRect(150, 260, 100, 40, fill='darkOrange')
-            # drawLabel('How to Play', 200, 280, size=15, fill='white')
-            drawImage(self.howToPlayButton, 155, 270)
 
-            # drawRect(150, 320, 100, 40, fill='purple')
-            # drawLabel('Leaderboard', 200, 340, size=15, fill='white')
-            drawImage(self.leaderboardButton, 155, 330)
-
+            drawImage(self.startButton, 210, 290)
+            drawImage(self.howToPlayButton, 210, 350)
+            drawImage(self.leaderboardButton, 210, 410)
 
         elif self.paused:
             drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
-        elif self.over:
-            drawImage(self.mossyBricksBackground, 0,0)
-            drawLabel(f'Game Over! Score: {self.score}', 200, 200, size=30, fill='red', bold=True)
 
-            drawRect(150, 340, 100, 40, fill='gray')
-            drawLabel('Start over', 200, 360, size=20, fill='white')
+        elif self.over:
+            drawImage(self.gameOverBackground, 0,0)
+
+            drawLabel(f'{self.score}', 250, 260, size=60, fill='white', bold=True)
+            drawImage(self.startOverButton, 200, 350)
         else:
             self.drawRoadBackground()
             self.player.draw()
@@ -258,7 +236,7 @@ class Game:
                 coin.draw()
             if self.hole:
                 self.hole.draw()
-            drawLabel(f'Score: {self.score}', 200, 20, size=18, bold=True, fill="white")
+            drawLabel(f'Score: {self.score}', 250, 20, size=18, bold=True, fill="white")
 
 def onAppStart(app):
     app.game = Game(app)
@@ -278,7 +256,7 @@ def onKeyHold(app, keys):
 
 def onMousePress(app, x, y):
     if app.game.tutorial:
-        if 150 <= x <= 250 and 340 <= y <= 380:
+        if 200 <= x <= 300 and 375 <= y <= 415:
             # Return to main menu
             app.game.tutorial = False
 
@@ -288,24 +266,29 @@ def onMousePress(app, x, y):
             app.game.leaderboard = False
     
     elif app.game.over:
-        if 150 <= x <= 250 and 340 <= y <= 380:
+        if 200 <= x <= 300 and 350 <= y <= 390:
             # Return to main menu
             app.game.reset()
 
-    elif not app.game.started:
-        if 155 <= x <= 255 and 210 <= y <= 245:
-            app.game.start()
+    elif app.game.selectingMode:
+        if 200 <= x <= 330 and 310 <= y <= 360:
+            app.game.selectingMode = False
+            app.game.start()  # start actual game
 
-        elif 155 <= x <= 255 and 260 <= y <= 300:
+    elif not app.game.started:
+        if 210 <= x <= 310 and 290 <= y <= 330:
+            app.game.selectingMode = True
+
+        elif 210 <= x <= 310 and 350 <= y <= 390:
             app.game.instructions()
 
-        elif 155 <= x <= 255 and 320 <= y <= 360:
+        elif 210 <= x <= 310 and 410 <= y <= 450:
             app.game.leadership()
 
 def redrawAll(app):
     app.game.draw()
 
 def main():
-    runApp()
+    runApp(width=500, height=500)
 
 main()
