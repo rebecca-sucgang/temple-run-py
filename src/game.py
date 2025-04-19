@@ -51,8 +51,12 @@ class Coin:
     def __init__(self, x, y): 
         self.x = x
         self.y = y
+<<<<<<< Updated upstream
         self.size = 20
         self.coinImages = CMUImage(PILImage.open('src/images/classiccoin.png').resize((self.size, self.size)))
+=======
+        self.size = 10
+>>>>>>> Stashed changes
         #self.coins = [] # pranav added this self.coins
 
     def move(self, speed):
@@ -84,6 +88,7 @@ class Game:
     def __init__(self, app):
         self.app = app
         self.coins = []
+<<<<<<< Updated upstream
         # backgrounds added by rebecca
         self.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((400, 400)))
         self.forestBackground = CMUImage(PILImage.open('src/images/forestbackground.jpg').resize((400, 400)))
@@ -93,6 +98,8 @@ class Game:
         self.howToPlayButton = CMUImage(PILImage.open('src/images/buttons/howtoplay.png'))
         self.leaderboardButton = CMUImage(PILImage.open('src/images/buttons/leaderboard.png'))
 
+=======
+>>>>>>> Stashed changes
         self.reset()
 
     def reset(self):
@@ -202,6 +209,11 @@ class Game:
     #         print(sorted(self.coins))
     #         return sorted(self.coins)[-1]
             
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
     def drawRoadBackground(self):
         drawImage(self.forestBackground, 0, 0)
         # Used ChatGPT to generate road background - after Hack112, I will do it myself
