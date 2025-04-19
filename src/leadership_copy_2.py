@@ -1,6 +1,15 @@
-import json
 from cmu_graphics import *
 import random
+import json 
+
+def load_scores_from_file():
+    try:
+        with open("my_scores.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"recent_score": 0, 
+                "max_score": 0,
+                "past_scores": []}
 
 
 class Player:
@@ -57,6 +66,11 @@ class Game:
     def __init__(self, app):
         self.app = app
         self.scoreList = []
+        scores = load_scores_from_file()
+        self.recent_score = scores["recent_score"]
+        self.max_score = scores["max_score"]
+        self.past_scores = scores.get("past_scores", [])
+        #print("LOADED:", self.recent_score, self.max_score)
         self.reset()
 
     def reset(self):
@@ -71,7 +85,6 @@ class Game:
         self.player = Player(200, 350, 15)
         self.hole = None  # Only one hole at a time
         self.coinTimer = 0
-        self.maxScore = 0
 
     def start(self):
         self.reset()
@@ -136,7 +149,10 @@ class Game:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
                 self.scoreList.append(self.score) # pranav added this
-                
+                self.recent_score = self.score
+                self.end_game()
+
+
             elif self.hole.y > 400:
                 self.hole = None
 
@@ -157,37 +173,61 @@ class Game:
         if self.scoreList == []:
             return None
         else:
-            return max(self.scoreList)
+            self.max_score = max(self.scoreList)
+            return self.max_score
         
     def returnRecentScore(self): # pranav added this function
         if self.scoreList == []:
             return None
         else:
-            return (self.scoreList)[-1]
+            self.recent_score = (self.scoreList)[-1]
+            return self.recent_score
         
+    def save_scores_to_file(self):
+
+        if not hasattr(self, 'past_scores'):
+            self.past_scores = []
+
+        self.past_scores.append(self.recent_score)
+        self.past_scores = self.past_scores[-3:] # maintaining last 3 scores only
+
+
+        scores = {
+            "recent_score": self.recent_score,
+            "max_score": self.max_score,
+            "past_scores" : self.past_scores
+        }
+        #print("Writing to file:", scores)
+        with open("my_scores.json", "w") as f:
+            json.dump(scores, f, indent=4)
+
+   
+
+        
+    def end_game(self):
+        self.recent_score = self.score
+
+        if self.score > self.max_score:
+            self.max_score = self.score
+
+        
+        self.save_scores_to_file()
+
+
+
     def leaderShipBoard(self):
-        # Step 1: Load saved scores
-        try:
-            with open("my_scores.json", "r") as f:
-                scores = json.load(f)
-        except FileNotFoundError:
-            scores = {"recent_score": 0, "max_score": 0}
-
-        # Step 2: Clear screen if needed
-        drawRect(0, 0, 400, 400, fill='white')  # This covers the entire screen
-
-
-        # Step 3: Display the leaderboard text
         drawLabel("Leaderboard", 200, 50, size=30, bold=True)
-        drawLabel(f"Most Recent Score: {self.returnRecentScore()}", 200, 120)
-        drawLabel(f"Maximum Score:     {self.returnMaxScore()}", 200, 160)
+        drawLabel(f"Most Recent Score: {self.recent_score}", 200, 100)
+        drawLabel(f"Maximum Score:     {self.max_score}", 200, 140)
+        drawRect(150, 340, 100, 40, fill = 'gray')
+        drawLabel('Back', 200, 360, size=20, fill = 'white')
 
-        # Optional: Add a "Back" button
-        self.backButton = drawRect(150, 300, 100, 40, fill='gray')
-        drawLabel("Back", 200, 320)
+        drawLabel('Scores from the 3 most recent runs', 200, 180, size=18, bold=True)    
+        for i in range(len(self.past_scores)):
+            runNumber = i
+            runScore = self.past_scores[runNumber]
+            drawLabel(f'Run {runNumber+1} : {runScore}', 200, 200+30*i)
 
-
-    
 
 
     def drawRoadBackground(self):
@@ -216,9 +256,7 @@ class Game:
             # drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 200, 80, size = 20, bold = True)
             # drawRect(150, 340, 100, 40, fill = 'gray')
             # drawLabel('Back', 200, 360, size=20, fill = 'white')
-
             self.leaderShipBoard()
-
 
         elif not self.started:
             drawLabel('Temple Run', 200, 150, size=40, bold=True)
@@ -271,7 +309,7 @@ def onMousePress(app, x, y):
             app.game.tutorial = False
 
     elif app.game.leaderboard: 
-        if 150 <= x <= 250 and 300 <= y <= 340:
+        if 150 <= x <= 250 and 340 <= y <= 380:
             # Return to main menu
             app.game.leaderboard = False
     
