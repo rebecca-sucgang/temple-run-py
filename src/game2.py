@@ -112,7 +112,7 @@ class Game:
 
         playerBounds = self.player.getBounds()
 
-        # Check if player got coins
+        # Check is player got coins
         updatedCoins = []
         for coin in self.coins:
             if self.checkCollision(playerBounds, coin.getBounds()):
@@ -154,7 +154,7 @@ class Game:
         if self.scoreList == []:
             return None
         else:
-            return max(self.scoreList)
+            return sorted(self.scoreList)[-1]
         
     def returnRecentScore(self): # pranav added this function
         if self.scoreList == []:
@@ -185,7 +185,6 @@ class Game:
             drawLabel('Back', 200, 360, size=20, fill='white')
 
         elif self.leaderboard: # pranav
-            drawRect(0, 0, 400, 400, fill = 'cyan')
             drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 200, 120, size = 20, bold = True)
             drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 200, 80, size = 20, bold = True)
             drawRect(150, 340, 100, 40, fill = 'gray')

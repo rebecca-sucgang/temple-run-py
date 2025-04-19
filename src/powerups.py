@@ -333,3 +333,70 @@ main()
 #                 self.magnetActive = False
 
 
+# NEXT FEW LINES OF CODE IS FOR THE RESURRECTION WINGS:
+
+
+# class Wing: # this is a proxy for the resurrection wings 
+#     def __init__(self, x, y): 
+#         self.x = x
+#         self.y = y
+#         self.size = 10
+        
+
+#     def move(self, speed):
+#         self.y += speed
+
+#     def draw(self): # the star represents the resurection wings
+#         drawStar(self.x, self.y, self.size, fill = 'pink', border = 'black')
+
+#     def getBounds(self):
+#         return (self.x - self.size, self.y - self.size, self.x + self.size, self.y + self.size)
+
+    
+# class Game:
+#     def __init__(self, app):
+#         pass
+
+#     def reset(self):
+#         self.wings = []
+#         self.wingTimer = 200
+#         self.wingActive = False
+#         self.wingDuration = 0
+
+#     def update(self):
+#         if self.wingTimer <= 0:
+#             x = random.randint(100, 300) 
+#             self.wings.append(Wing(x, 0))
+#             self.wingTimer = 400
+#         else:
+#             self.wingTimer -= 1
+        
+#         # move the wings down
+#         for wing in self.wings:
+#             wing.move(self.speed)
+
+#         # if wing has been collected
+#         updatedWings = []
+#         for wing in self.wings:
+#             if self.checkCollision(self.player.getBounds()):
+#                 self.wingActive = True
+#                 self.wingDuration = 300
+#             elif wingt.y < 400:
+#                 updatedWings.append(magnet)
+
+#         self.wings = updatedWings
+        
+#         # decrease magnet power-up time
+#         if self.wingActive:
+#             self.wingDuration -= 1
+             
+#             updatedCoins = []
+#             for coin in self.coins:
+#                 dx = self.player.x - coin.x
+
+#             if self.wingDuration <= 0:
+#                 self.wingActive = False
+
+
+
+# look back at notes and see what to modify in the code based on what I want
