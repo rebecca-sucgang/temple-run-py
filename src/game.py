@@ -69,6 +69,7 @@ class Game:
         self.app = app
         self.scoreList = []
         self.coins = []
+
         # backgrounds added by rebecca
         self.startBackground = CMUImage(PILImage.open('src/images/startcavelogo.png').resize((500, 500)))
         self.tutorialBackground = CMUImage(PILImage.open('src/images/tutorial.png').resize((500, 500)))
@@ -293,7 +294,7 @@ class Game:
                 coin.draw()
             if self.hole:
                 self.hole.draw()
-            drawLabel(f'Score: {self.score}', 200, 20, size=18, bold=True, fill="white")
+            drawLabel(f'Score: {self.score}', 250, 20, size=18, bold=True, fill="white")
 
 def onAppStart(app):
     app.game = Game(app)
