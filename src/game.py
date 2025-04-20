@@ -1,6 +1,17 @@
 from cmu_graphics import *
 import random
 from PIL import Image as PILImage
+import json 
+
+# added leaderboard code by pranav
+def load_scores_from_file():
+    try:
+        with open("my_scores.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"recent_score": 0, 
+                "max_score": 0,
+                "past_scores": []}
 
 class Player:
     def __init__(self, x, y, radius):
@@ -71,7 +82,12 @@ class Game:
         self.mazeModeButton = CMUImage(PILImage.open('src/images/buttons/mazemode.png'))
         self.leaderboardButton = CMUImage(PILImage.open('src/images/buttons/leaderboard.png'))
         self.startOverButton = CMUImage(PILImage.open('src/images/buttons/startover.png'))
-
+        # code from pranav's leaderboard code
+        scores = load_scores_from_file()
+        self.recent_score = scores["recent_score"]
+        self.max_score = scores["max_score"]
+        self.past_scores = scores.get("past_scores", [])
+        #print("LOADED:", self.recent_score, self.max_score)
         self.reset()
 
     def reset(self):
@@ -83,7 +99,7 @@ class Game:
         self.paused = False
         self.score = 0
         self.speed = 5 # increased over time for diffuculty
-        self.player = Player(200, 350, 15)
+        self.player = Player(200, 420, 15)
         self.hole = None  # Only one hole at a time
         self.coinTimer = 0
         self.roadOffset = 0 # vertical scroll for road
@@ -156,7 +172,8 @@ class Game:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
                 self.scoreList.append(self.score)
-                #self.scoreList.append(self.score)
+                self.recent_score = self.score  # just to be sure
+                self.end_game()  # 🔥 this saves the score to the file
 
             elif self.hole.y > 500:
                 self.hole = None
@@ -185,6 +202,48 @@ class Game:
             return None
         else:
             return (self.scoreList)[-1]
+        
+    # added updated leaderboard by pranav
+    def save_scores_to_file(self):
+
+        if not hasattr(self, 'past_scores'):
+            self.past_scores = []
+
+        self.past_scores.append(self.recent_score)
+        self.past_scores = self.past_scores[-3:] # maintaining last 3 scores only
+
+
+        scores = {
+            "recent_score": self.recent_score,
+            "max_score": self.max_score,
+            "past_scores" : self.past_scores
+        }
+        #print("Writing to file:", scores)
+        with open("my_scores.json", "w") as f:
+            json.dump(scores, f, indent=4)
+
+   
+        
+    def end_game(self):
+        self.recent_score = self.score
+
+        if self.score > self.max_score:
+            self.max_score = self.score
+
+        
+        self.save_scores_to_file()
+
+    def leaderShipBoard(self):
+        drawLabel("Leaderboard", 250, 100, size=30, bold=True)
+        drawLabel(f"Most Recent Score: {self.recent_score}", 250, 150)
+        drawLabel(f"Maximum Score:     {self.max_score}", 250, 190)
+        drawLabel('Scores from the 3 most recent runs', 250, 230, size=18, bold=True)    
+        for i in range(len(self.past_scores)):
+            runNumber = i
+            runScore = self.past_scores[runNumber]
+            drawLabel(f'Run {runNumber+1} : {runScore}', 250, 250+30*i)
+
+    # end of pranav's leaderboard code
             
     def drawRoadBackground(self):
         drawImage(self.forestBackground, 0, 0)
@@ -206,9 +265,12 @@ class Game:
 
         elif self.leaderboard: # pranav
             #drawLabel(f'Coins collected in most recent run : {self.returnScore()}', 100, 70, size = 25, bold = True)
-            drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 250, 120, size=20, bold=True)
-            drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 250, 80, size=20, bold=True)
-            drawImage(self.backButton, 200, 390)
+            # drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 250, 120, size=20, bold=True)
+            # drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 250, 80, size=20, bold=True)
+            
+            # added pranav's code here
+            self.leaderShipBoard()
+            drawImage(self.backButton, 200, 410)
 
         elif not self.started:
             drawImage(self.startBackground, 0,0)
