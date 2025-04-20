@@ -11,7 +11,6 @@ def load_scores_from_file():
                 "max_score": 0,
                 "past_scores": []}
 
-
 class Player:
     def __init__(self, x, y, radius):
         self.x = x
