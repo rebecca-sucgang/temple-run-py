@@ -10,3 +10,7 @@ original design, and what the source is for that code.
 
 We used ChatGPT as a TA, to guide us in debugging.  
 We also researched into sprites 
+
+William Li (TA) helped me write code for the leadership board during OH (the idea was mine though, and I tried to write it but got stuck)
+
+ChatGPT provided guidance in terms of storing the game score and providing data regarding past 3 sources (even after exiting and restarting the app)
