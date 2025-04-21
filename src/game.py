@@ -1,7 +1,7 @@
 from cmu_graphics import *
 import random
 from PIL import Image as PILImage
-import json 
+import json
 
 # added leaderboard code by pranav
 def load_scores_from_file():
@@ -14,22 +14,62 @@ def load_scores_from_file():
                 "past_scores": []}
 
 class Player:
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.r = radius
+        # self.r = radius
+        # adding runner sprite -- asked chatgpt for help on how to integrate a sprite
+        self.frameIndex = 0
+        self.frameCount = 6
+        self.frameSize = 200
+        self.tick = 0
 
-    def move(self, direction):
-        if direction == 'left' and self.x - self.r > 150:
-            self.x -=5
-        elif direction == 'right' and self.x + self.r < 350:
-            self.x += 5
+        self.frameWidth = 186
+        self.frameHeight = 396
+
+        # What the sprite actually appear as
+        self.displayWidth = 50
+        self.displayHeight = 100
+
+         # Automatically build the sprite sheet if it's missing
+        self.spriteSheet = CMUImage(PILImage.open('src/images/sprites/runnerspritesheet.png'))
+
+    # def move(self, direction):
+    #     if direction == 'left' and self.x - self.r > 150:
+    #         self.x -=5
+    #     elif direction == 'right' and self.x + self.r < 350:
+    #         self.x += 5
+
+    def move(self, direction, speed):
+        halfWidth = self.displayWidth // 2
+        if direction == 'left' and self.x - halfWidth > 150:
+            self.x -= speed
+        elif direction == 'right' and self.x + halfWidth < 350:
+            self.x += speed
+
+    # def draw(self):
+    #     drawCircle(self.x, self.y, self.r, fill='lightblue')
 
     def draw(self):
-        drawCircle(self.x, self.y, self.r, fill='lightblue')
+        self.tick += 1
+        if self.tick % 5 == 0:
+            self.frameIndex = (self.frameIndex + 1) % self.frameCount
+
+        left = self.frameIndex * self.frameWidth
+        top = 0
+
+        rawSpriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
+        cropped = rawSpriteSheet.crop((left, top, left + self.frameWidth, top + self.frameHeight))
+        resized = cropped.resize((self.displayWidth, self.displayHeight))
+
+        frameToDraw = CMUImage(resized)
+        drawImage(frameToDraw, self.x - self.displayWidth//2, self.y - self.displayHeight//2)
 
     def getBounds(self):
-        return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
+        return (self.x - self.displayWidth // 2,
+                self.y - self.displayHeight // 2,
+                self.x + self.displayWidth // 2,
+                self.y + self.displayHeight // 2)
 
 class Coin:
     def __init__(self, x, y): 
@@ -100,7 +140,7 @@ class Game:
         self.paused = False
         self.score = 0
         self.speed = 5 # increased over time for diffuculty
-        self.player = Player(200, 420, 15)
+        self.player = Player(250, 440)
         self.hole = None  # Only one hole at a time
         self.coinTimer = 0
         self.roadOffset = 0 # vertical scroll for road
@@ -185,7 +225,7 @@ class Game:
 
     def movePlayer(self, direction):
         if self.started and not self.over:
-            self.player.move(direction)
+            self.player.move(direction, self.speed)
 
     def checkCollision(self, a, b):
         ax1, ay1, ax2, ay2 = a
