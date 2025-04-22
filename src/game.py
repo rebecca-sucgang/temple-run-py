@@ -1,6 +1,7 @@
 from cmu_graphics import *
 import random
 from PIL import Image as PILImage
+from ui_assets import UIGame
 import json
 
 # added leaderboard code by pranav
@@ -107,37 +108,12 @@ class Game:
         self.app = app
         self.scoreList = []
         self.coins = []
+        self.UIGame = UIGame()
+        
+        self.music = Sound('sounds/templerunmusic.mp3')
+        self.musicPaused = False
+        self.music.play(loop=True)
 
-        # backgrounds added by rebecca
-        self.startBackground = CMUImage(
-            PILImage.open('src/images/startcavelogo.png').resize((500, 500)))
-        self.tutorialBackground = CMUImage(
-            PILImage.open('src/images/tutorial.png').resize((500, 500)))
-        self.forestBackground = CMUImage(
-            PILImage.open('src/images/forestbackground.jpg').resize((500, 500)))
-        self.gameOverBackground = CMUImage(
-            PILImage.open('src/images/gameover.png').resize((500, 500)))
-        self.leaderboardBackground = CMUImage(
-            PILImage.open('src/images/leaderboard.png').resize((500, 500)))
-        # buttons by rebecca
-        self.startButton = CMUImage(
-            PILImage.open('src/images/buttons/start.png'))
-        self.howToPlayButton = CMUImage(
-            PILImage.open('src/images/buttons/howtoplay.png'))
-        self.backButton = CMUImage(
-            PILImage.open('src/images/buttons/back.png'))
-        self.normalModeButton = CMUImage(
-            PILImage.open('src/images/buttons/normalmode.png'))
-        self.mazeModeButton = CMUImage(
-            PILImage.open('src/images/buttons/mazemode.png'))
-        self.pauseButton = CMUImage(
-            PILImage.open('src/images/buttons/pause.png').resize((40, 40)))
-        self.playButton = CMUImage(
-            PILImage.open('src/images/buttons/play.png').resize((70, 70)))
-        self.leaderboardButton = CMUImage(
-            PILImage.open('src/images/buttons/leaderboard.png'))
-        self.startOverButton = CMUImage(
-            PILImage.open('src/images/buttons/startover.png'))
         # code from pranav's leaderboard code
         scores = loadScoresFromFile()
         self.recentScore = scores["recentScore"]
@@ -176,6 +152,13 @@ class Game:
     def togglePause(self):
         if self.started and not self.over:
             self.paused = not self.paused
+
+    def toggleMusic(self):
+        if self.musicPaused:
+            self.music.play(loop=True)
+        else:
+            self.music.pause()
+        self.musicPaused = not self.musicPaused
 
     def update(self):
         if not self.started or self.over or self.paused:
@@ -221,7 +204,7 @@ class Game:
             if coin.y < 500: # 500 is screen width 
                 validCoins.append(coin)  
         # Adds coin to validCoins list
-        self.coins[:] = validCoins  
+        self.coins = validCoins
 
         # player falls in hole
         if self.hole:
@@ -285,7 +268,7 @@ class Game:
         self.saveScoresToFile()
 
     def leaderShipBoard(self):
-        drawImage(self.leaderboardBackground, 0, 0)
+        drawImage(self.UIGame.leaderboardBackground, 0, 0)
         drawLabel(f"{self.recentScore}", 350, 123, 
                   fill='white', size=18, bold=True)
         drawLabel(f"{self.maxScore}", 330, 161, 
@@ -299,7 +282,7 @@ class Game:
     # end of pranav's leaderboard code
             
     def drawRoadBackground(self):
-        drawImage(self.forestBackground, 0, 0)
+        drawImage(self.UIGame.forestBackground, 0, 0)
         # Used ChatGPT to generate road background
         #  - after Hack112, I will do it myself
         for y in range(-40, 500, 20):
@@ -307,33 +290,46 @@ class Game:
             for x in range(150 + offset, 350, 20):
                 drawRect(x, y + self.roadOffset, 20, 20, 
                          fill='sienna', border='black', borderWidth=1)
+                
+        # if step reaches a certain amount, draw 
+                
+    def drawSoundIcon(self):
+        drawImage(self.UIGame.soundButton, 20, 430)
+        if self.musicPaused:
+            drawLine(20, 430, 70, 480, fill='red', lineWidth=4)
 
     def draw(self):
         if self.tutorial:
-            drawImage(self.tutorialBackground, 0, 0)
-            drawImage(self.backButton, 200, 375)
+            drawImage(self.UIGame.tutorialBackground, 0, 0)
+            drawImage(self.UIGame.backButton, 200, 375)
+            self.drawSoundIcon()
         
         elif self.selectingMode:
-            drawImage(self.startBackground, 0,0)
-            drawImage(self.normalModeButton, 200, 310)
-            drawImage(self.mazeModeButton, 200, 390)
+            drawImage(self.UIGame.startBackground, 0,0)
+            drawImage(self.UIGame.normalModeButton, 200, 285)
+            drawImage(self.UIGame.mazeModeButton, 200, 350)
+            drawImage(self.UIGame.backButton, 215, 415)
+            self.drawSoundIcon()
 
         elif self.leaderboard: # pranav
             # added pranav's code here
             self.leaderShipBoard()
-            drawImage(self.backButton, 200, 410)
+            drawImage(self.UIGame.backButton, 200, 410)
+            self.drawSoundIcon()
 
         elif not self.started:
-            drawImage(self.startBackground, 0,0)
-            drawImage(self.startButton, 210, 290)
-            drawImage(self.howToPlayButton, 210, 350)
-            drawImage(self.leaderboardButton, 210, 410)
+            drawImage(self.UIGame.startBackground, 0,0)
+            drawImage(self.UIGame.startButton, 210, 290)
+            drawImage(self.UIGame.howToPlayButton, 210, 350)
+            drawImage(self.UIGame.leaderboardButton, 210, 410)
+            self.drawSoundIcon()
         
         elif self.over:
-            drawImage(self.gameOverBackground, 0,0)
+            drawImage(self.UIGame.gameOverBackground, 0,0)
             drawLabel(f'{self.score}', 250, 260, 
                       size=60, fill='white', bold=True)
-            drawImage(self.startOverButton, 200, 350)  
+            drawImage(self.UIGame.startOverButton, 200, 350)
+            self.drawSoundIcon()
 
         elif self.paused:
             self.drawRoadBackground()
@@ -346,7 +342,8 @@ class Game:
                       size=18, bold=True, fill="white")
             drawLabel('Paused', 250, 60, 
                       size=24, fill='orange', bold=True)
-            drawImage(self.playButton, 410, 420)
+            drawImage(self.UIGame.playButton, 410, 420)
+            self.drawSoundIcon()
         else:
             self.drawRoadBackground()
             self.player.draw()
@@ -356,7 +353,8 @@ class Game:
                 self.hole.draw()
             drawLabel(f'Score: {self.score}', 250, 20, 
                       size=18, bold=True, fill="white")
-            drawImage(self.pauseButton, 423, 433)
+            drawImage(self.UIGame.pauseButton, 423, 433)
+            self.drawSoundIcon()
 
 def onAppStart(app):
     app.game = Game(app)
@@ -374,37 +372,47 @@ def onKeyHold(app, keys):
 
 def onMousePress(app, x, y):
     if app.game.started and not app.game.over:
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
         if 410 <= x <= 470 and 420 <= y <= 470:
             app.game.togglePause()
             return
 
-    if app.game.tutorial:
+    elif app.game.tutorial:
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
         if 200 <= x <= 300 and 375 <= y <= 415:
             # Return to main menu
             app.game.tutorial = False
 
     elif app.game.leaderboard: 
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
         if 200 <= x <= 300 and 390 <= y <= 430:
-            # Return to main menu
             app.game.leaderboard = False
     
     elif app.game.over:
         if 200 <= x <= 300 and 350 <= y <= 390:
-            # Return to main menu
             app.game.reset()
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
     
     elif app.game.selectingMode:
-        if 200 <= x <= 330 and 310 <= y <= 360:
+        if 200 <= x <= 330 and 285 <= y <= 335:
             app.game.selectingMode = False
             app.game.start()  # start actual game
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
+        if 210 <= x <= 310 and 415 <= y <= 465:
+            app.game.reset()
 
     elif not app.game.started:
         if 210 <= x <= 310 and 290 <= y <= 330:
             app.game.selectingMode = True
-
+        if 20 <= x <= 80 and 420 <= y <= 480:
+            app.game.toggleMusic()
         elif 210 <= x <= 310 and 350 <= y <= 390:
             app.game.instructions()
-
         elif 210 <= x <= 310 and 410 <= y <= 450:
             app.game.leadership()
 
