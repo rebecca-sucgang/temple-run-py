@@ -10,6 +10,8 @@ def load_scores_from_file():
         return {"recent_score": 0, 
                 "max_score": 0,
                 "past_scores": []}
+    
+
 
 class Player:
     def __init__(self, x, y, radius):
@@ -30,20 +32,28 @@ class Player:
         return (self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
 
 class Coin:
-    def __init__(self, x, y): 
+    def __init__(self, x, y, type): # pranav added the type
         self.x = x
         self.y = y
         self.size = 10
         #self.coins = [] # pranav added this self.coins
+        self.type = random.choice(['poison', 'gold']) # pranav added this line
 
     def move(self, speed):
         self.y += speed
 
     def draw(self):
-        drawCircle(self.x, self.y, self.size, fill='gold')
+        if self.type == 'poison': # pranav
+            drawCircle(self.x, self.y, self.size, fill='red')
+        else: 
+            drawCircle(self.x, self.y, self.size, fill='gold') # pranav
+   
+
 
     def getBounds(self):
         return (self.x - self.size, self.y - self.size, self.x + self.size, self.y + self.size)
+    
+
 
 class Hole:
     def __init__(self, x, y):
@@ -110,9 +120,11 @@ class Game:
 
         # Generate coins in vertical columns on the road
         if self.coinTimer <= 0:
-            x = random.randint(100, 300)  
+            randomIndex = None
+            x = random.randint(100, 300) 
             for i in range(5):
-                self.coins.append(Coin(x, -i * 25))
+                type = 'poison' if i == randomIndex else 'gold'
+                self.coins.append(Coin(x, -i * 25, type))
             self.coinTimer = 40
         else:
             self.coinTimer -= 1
