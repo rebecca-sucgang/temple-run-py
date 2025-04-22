@@ -8,9 +8,14 @@ make it clear where you use code that is partly or entirely not of your
 original design, and what the source is for that code.
 ------------------------------------>
 
+Overall:
 We used ChatGPT as a TA, to guide us in debugging.  
 We also researched into sprites 
 
+Pranav:
 William Li (TA) helped me write code for the leadership board during OH (the idea was mine though, and I tried to write it but got stuck)
-
 ChatGPT provided guidance in terms of storing the game score and providing data regarding past 3 sources (even after exiting and restarting the app)
+
+Rebecca:
+ChatGPT provided guidance for how to create sprite sheets and helped me write the code for the player sprites.
+Similarly, I used ChatGPT to provide guidance for how to integrate images into the code for my UI design.
