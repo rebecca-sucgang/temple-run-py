@@ -1,6 +1,5 @@
 from cmu_graphics import *
 import random
-from collections import deque
 
 
 class Maze:
@@ -78,7 +77,6 @@ class MazeSolver:
 
         while path:
             row, col = path.pop(0)  # Simulating popleft() using pop(0)
-
             # Exit found → backtrack to reconstruct path
             if (row, col) in self.exits:
                 path = []
