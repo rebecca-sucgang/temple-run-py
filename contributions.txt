@@ -20,11 +20,12 @@ Pranav Srinivas (pranavsr)
 
 
 Indu Arimilli (iarimill)
-- Wrote game.py code (all the classes)
+- Wrote original game.py code (all the classes)
 - Made background
 - Worked on 2.5D Graphics
     Contributions (4/19):
     - Maze Generation Algorithm (maze.py)
+    - DFS Pathfinding Algorithm
     - Working on UI for maze generation algorithm 
 
 Rebecca Sucgang (rsucgang)

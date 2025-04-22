@@ -2,14 +2,6 @@ from cmu_graphics import *
 import random
 from collections import deque
 
-DIRS = {
-    'up'   : (-1,  0),
-    'right': ( 0,  1),
-    'down' : ( 1,  0),
-    'left' : ( 0, -1)
-}
-TURN_LEFT  = {'up':'left', 'left':'down', 'down':'right', 'right':'up'}
-TURN_RIGHT = {v:k for k, v in TURN_LEFT.items()}
 
 class Maze:
     def __init__(self, rows, cols, extra_exits=2):
@@ -25,39 +17,44 @@ class Maze:
         self.addExtraExits(extra_exits)
 
     def generateMaze(self, row, col):
+        # Mark the current cell as visited and carve a passage (0 = open space)
         self.visited[row][col] = True
         self.grid[row][col] = 0
 
+        #possible directions
         directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
-        random.shuffle(directions)
+        random.shuffle(directions) # Randomize for a organic maze
 
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
+            # Legality: Stay inside the outer border of walls (index 0 and last index stay solid)
             if 1 <= new_row < self.rows - 1 and 1 <= new_col < self.cols - 1:
                 if not self.visited[new_row][new_col]:
                     self.grid[row + dr // 2][col + dc // 2] = 0
                     self.generateMaze(new_row, new_col)
 
     def addExtraExits(self, count):
+        # Collect every wall cell on the border that sits next to an interior path (0)
         edges = []
         for r in range(1, self.rows - 1):
-            if self.grid[r][1] == 0:
+            if self.grid[r][1] == 0: # possible left border candidate 
                 edges.append((r, 0))
-            if self.grid[r][self.cols - 2] == 0:
+            if self.grid[r][self.cols - 2] == 0: # possible right border condidate
                 edges.append((r, self.cols - 1))
         for c in range(1, self.cols - 1):
-            if self.grid[1][c] == 0:
+            if self.grid[1][c] == 0: # possible top border candidate
                 edges.append((0, c))
-            if self.grid[self.rows - 2][c] == 0:
+            if self.grid[self.rows - 2][c] == 0: # possible bottom border candidate
                 edges.append((self.rows - 1, c))
 
-        random.shuffle(edges)
+        random.shuffle(edges) # to randomize the exits we open up
         for _ in range(min(count, len(edges))):
             r, c = edges.pop()
-            self.grid[r][c] = 0
-            self.exits.append((r, c))
+            self.grid[r][c] = 0 # carves the exit
+            self.exits.append((r, c)) # tracks the exit
 
     def isPath(self, row, col):
+        # helper: true if the cell is open basically
         return self.grid[row][col] == 0
 
 class MazeSolver:
@@ -66,7 +63,7 @@ class MazeSolver:
         self.rows = maze.rows
         self.cols = maze.cols
         self.grid = maze.grid
-        self.start = start if start else maze.start  # Use player's position if provided
+        self.start = start if start else maze.start  # using player's position if provided
         self.exits = maze.exits
 
     def findShortestPath(self):
@@ -74,14 +71,15 @@ class MazeSolver:
         visited = [[False] * self.cols for _ in range(self.rows)]
         parent = [[None] * self.cols for _ in range(self.rows)]
 
-        # Using a list as the queue
-        queue = []
-        queue.append(start)
+        # Breadth‑first search (BFS) queue; list with pop(0) ≈ deque.popleft()
+        path = []
+        path.append(start)
         visited[start[0]][start[1]] = True
 
-        while queue:
-            row, col = queue.pop(0)  # Simulating popleft() using pop(0)
+        while path:
+            row, col = path.pop(0)  # Simulating popleft() using pop(0)
 
+            # Exit found → backtrack to reconstruct path
             if (row, col) in self.exits:
                 path = []
                 while (row, col) != start:
@@ -89,17 +87,17 @@ class MazeSolver:
                     row, col = parent[row][col]
                 path.append(start)
                 path.reverse()
-                return path
-
+                return path  # Shortest path (BFS guarantees minimal steps)
+            
+            # Explores 4‑neighbour cells
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 new_row, new_col = row + drow, col + dcol
                 if (0 <= new_row < self.rows and 0 <= new_col < self.cols and
                     self.grid[new_row][new_col] == 0 and not visited[new_row][new_col]):
                     visited[new_row][new_col] = True
                     parent[new_row][new_col] = (row, col)
-                    queue.append((new_row, new_col))
-
-        return []
+                    path.append((new_row, new_col))
+        return [] # like return None -> no path is reachable from the start
 
 
 class MazePlayer:
@@ -171,57 +169,10 @@ def onAppStart(app):
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
-
-    # Create MazeSolver instance with the player's current position as start
     app.shortestPathSolver = MazeSolver(app.maze, start=(app.player.row, app.player.col))
 
     app.showPath = False
     app.shortestPath = app.shortestPathSolver.findShortestPath()
-
-    app.SLICE_HEIGHT = app.height      #  full screen height
-    app.BASE_WIDTH   = app.width * 0.8 #  width of the nearest wall slice
-    app.NARROWING    = 0.65  
-
-def cellsInView(maze, row, col, facing, depth=4):
-    dr, dc = DIRS[facing]
-    leftDir  = DIRS[TURN_LEFT[facing]]
-    rightDir = DIRS[TURN_RIGHT[facing]]
-    result = []
-    for d in range(1, depth+1):
-        r, c = row+dr*d, col+dc*d
-        # front cell
-        result.append(('front', d, maze.isPath(r,c)))
-        # left wall of that slice
-        lr, lc = r+leftDir[0], c+leftDir[1]
-        result.append(('left', d, not maze.isPath(lr,lc)))
-        # right wall
-        rr, rc = r+rightDir[0], c+rightDir[1]
-        result.append(('right', d, not maze.isPath(rr,rc)))
-        if not maze.isPath(r,c): break   # hit solid wall
-    return result
-
-def drawFirstPerson(app):
-    view = cellsInView(app.maze,
-                       app.player.row,
-                       app.player.col,
-                       app.player.facing)
-    horizonY = app.height / 2
-
-    # Draw farthest slices first so closer ones cover them
-    for where, d, isWall in sorted(view, key=lambda x: -x[1]):   # far → near
-        if not isWall:
-            continue
-
-        w = app.BASE_WIDTH * (app.NARROWING ** (d - 1))
-        h = app.SLICE_HEIGHT * (app.NARROWING ** (d - 1))
-        cx = app.width / 2
-        if where == 'left':
-            cx -= w / 2
-        elif where == 'right':
-            cx += w / 2
-        # front stays centered
-        drawRect(cx - w / 2, horizonY - h / 2, w, h,
-                 fill='dimgray', border='black')
 
 def redrawAll(app):
     drawLabel('Maze Game (arrow keys to move, r = reset, p = path)', 250, 30, size=14)
