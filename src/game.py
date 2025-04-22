@@ -4,21 +4,21 @@ from PIL import Image as PILImage
 import json
 
 # added leaderboard code by pranav
-def load_scores_from_file():
+def loadScoresFromFile():
     try:
         with open("my_scores.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        return {"recent_score": 0, 
-                "max_score": 0,
-                "past_scores": []}
+        return {"recentScore": 0, 
+                "maxScore": 0,
+                "pastScores": []}
 
 class Player:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        # self.r = radius
-        # adding runner sprite -- asked chatgpt for help on how to integrate a sprite
+
+        # adding runner sprite -- asked chatgpt for help on how to create my own sprite and integrating it
         self.frameIndex = 0
         self.frameCount = 6
         self.frameSize = 200
@@ -26,19 +26,10 @@ class Player:
 
         self.frameWidth = 186
         self.frameHeight = 396
-
-        # What the sprite actually appear as
         self.displayWidth = 50
         self.displayHeight = 100
 
-         # Automatically build the sprite sheet if it's missing
-        self.spriteSheet = CMUImage(PILImage.open('src/images/sprites/runnerspritesheet.png'))
-
-    # def move(self, direction):
-    #     if direction == 'left' and self.x - self.r > 150:
-    #         self.x -=5
-    #     elif direction == 'right' and self.x + self.r < 350:
-    #         self.x += 5
+        self.runningSpriteSheet = CMUImage(PILImage.open('src/images/sprites/runnerspritesheet.png'))
 
     def move(self, direction, speed):
         halfWidth = self.displayWidth // 2
@@ -47,23 +38,21 @@ class Player:
         elif direction == 'right' and self.x + halfWidth < 350:
             self.x += speed
 
-    # def draw(self):
-    #     drawCircle(self.x, self.y, self.r, fill='lightblue')
-
-    def draw(self):
+    def updateAnimation(self): # animation only updates if the game isnt paused
         self.tick += 1
         if self.tick % 5 == 0:
             self.frameIndex = (self.frameIndex + 1) % self.frameCount
 
+    def draw(self):
         left = self.frameIndex * self.frameWidth
         top = 0
 
         rawSpriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
-        cropped = rawSpriteSheet.crop((left, top, left + self.frameWidth, top + self.frameHeight))
-        resized = cropped.resize((self.displayWidth, self.displayHeight))
+        croppedFrame = rawSpriteSheet.crop((left, top, left + self.frameWidth, top + self.frameHeight))
+        resizedFrame = croppedFrame.resize((self.displayWidth, self.displayHeight))
 
-        frameToDraw = CMUImage(resized)
-        drawImage(frameToDraw, self.x - self.displayWidth//2, self.y - self.displayHeight//2)
+        frame = CMUImage(resizedFrame)
+        drawImage(frame, self.x - self.displayWidth//2, self.y - self.displayHeight//2)
 
     def getBounds(self):
         return (self.x - self.displayWidth // 2,
@@ -77,7 +66,6 @@ class Coin:
         self.y = y
         self.size = 20
         self.coinImages = CMUImage(PILImage.open('src/images/classiccoin.png').resize((self.size, self.size)))
-        #self.coins = [] # pranav added this self.coins
 
     def move(self, speed):
         self.y += speed
@@ -115,20 +103,23 @@ class Game:
         self.tutorialBackground = CMUImage(PILImage.open('src/images/tutorial.png').resize((500, 500)))
         self.forestBackground = CMUImage(PILImage.open('src/images/forestbackground.jpg').resize((500, 500)))
         self.gameOverBackground = CMUImage(PILImage.open('src/images/gameover.png').resize((500, 500)))
+        self.leaderboardBackground = CMUImage(PILImage.open('src/images/leaderboard.png').resize((500, 500)))
         # buttons by rebecca
         self.startButton = CMUImage(PILImage.open('src/images/buttons/start.png'))
         self.howToPlayButton = CMUImage(PILImage.open('src/images/buttons/howtoplay.png'))
         self.backButton = CMUImage(PILImage.open('src/images/buttons/back.png'))
         self.normalModeButton = CMUImage(PILImage.open('src/images/buttons/normalmode.png'))
         self.mazeModeButton = CMUImage(PILImage.open('src/images/buttons/mazemode.png'))
+        self.pauseButton = CMUImage(PILImage.open('src/images/buttons/pause.png').resize((40, 40)))
+        self.playButton = CMUImage(PILImage.open('src/images/buttons/play.png').resize((70, 70)))
         self.leaderboardButton = CMUImage(PILImage.open('src/images/buttons/leaderboard.png'))
         self.startOverButton = CMUImage(PILImage.open('src/images/buttons/startover.png'))
         # code from pranav's leaderboard code
-        scores = load_scores_from_file()
-        self.recent_score = scores["recent_score"]
-        self.max_score = scores["max_score"]
-        self.past_scores = scores.get("past_scores", [])
-        #print("LOADED:", self.recent_score, self.max_score)
+        scores = loadScoresFromFile()
+        self.recentScore = scores["recentScore"]
+        self.maxScore = scores["maxScore"]
+        self.pastScores = scores.get("pastScores", [])
+
         self.reset()
 
     def reset(self):
@@ -165,6 +156,7 @@ class Game:
     def update(self):
         if not self.started or self.over or self.paused:
             return
+        self.player.updateAnimation() # animation only updates if the game isnt paused
         
         # gradually increase speed over time
         self.speed = 5 + self.score // 10
@@ -213,8 +205,8 @@ class Game:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
                 self.scoreList.append(self.score)
-                self.recent_score = self.score  # just to be sure
-                self.end_game()  # 🔥 this saves the score to the file
+                self.recentScore = self.score  # just to be sure
+                self.endGame()  # this saves the score to the file
 
             elif self.hole.y > 500:
                 self.hole = None
@@ -245,44 +237,38 @@ class Game:
             return (self.scoreList)[-1]
         
     # added updated leaderboard by pranav
-    def save_scores_to_file(self):
+    def saveScoresToFile(self):
+        if not hasattr(self, 'pastScores'):
+            self.pastScores = []
 
-        if not hasattr(self, 'past_scores'):
-            self.past_scores = []
-
-        self.past_scores.append(self.recent_score)
-        self.past_scores = self.past_scores[-3:] # maintaining last 3 scores only
-
+        self.pastScores.append(self.recentScore)
+        self.pastScores = self.pastScores[-3:] # maintaining last 3 scores only
 
         scores = {
-            "recent_score": self.recent_score,
-            "max_score": self.max_score,
-            "past_scores" : self.past_scores
+            "recentScore": self.recentScore,
+            "maxScore": self.maxScore,
+            "pastScores": self.pastScores
         }
-        #print("Writing to file:", scores)
+
         with open("my_scores.json", "w") as f:
             json.dump(scores, f, indent=4)
-
-   
         
-    def end_game(self):
-        self.recent_score = self.score
+    def endGame(self):
+        self.recentScore = self.score
 
-        if self.score > self.max_score:
-            self.max_score = self.score
+        if self.score > self.maxScore:
+            self.maxScore = self.score
 
-        
-        self.save_scores_to_file()
+        self.saveScoresToFile()
 
     def leaderShipBoard(self):
-        drawLabel("Leaderboard", 250, 100, size=30, bold=True)
-        drawLabel(f"Most Recent Score: {self.recent_score}", 250, 150)
-        drawLabel(f"Maximum Score:     {self.max_score}", 250, 190)
-        drawLabel('Scores from the 3 most recent runs', 250, 230, size=18, bold=True)    
-        for i in range(len(self.past_scores)):
+        drawImage(self.leaderboardBackground, 0, 0)
+        drawLabel(f"{self.recentScore}", 350, 123, fill='white', size=18, bold=True)
+        drawLabel(f"{self.maxScore}", 330, 161, fill='white', size=18, bold=True)
+        for i in range(len(self.pastScores)):
             runNumber = i
-            runScore = self.past_scores[runNumber]
-            drawLabel(f'Run {runNumber+1} : {runScore}', 250, 250+30*i)
+            runScore = self.pastScores[runNumber]
+            drawLabel(f'{runScore}', 300, 297+37*i,  fill='white', size=18, bold=True)
 
     # end of pranav's leaderboard code
             
@@ -305,10 +291,6 @@ class Game:
             drawImage(self.mazeModeButton, 200, 390)
 
         elif self.leaderboard: # pranav
-            #drawLabel(f'Coins collected in most recent run : {self.returnScore()}', 100, 70, size = 25, bold = True)
-            # drawLabel(f'Coins collected in most recent run : {self.returnRecentScore()}', 250, 120, size=20, bold=True)
-            # drawLabel(f'Maximum coins collected : {self.returnMaxScore()}', 250, 80, size=20, bold=True)
-            
             # added pranav's code here
             self.leaderShipBoard()
             drawImage(self.backButton, 200, 410)
@@ -318,15 +300,22 @@ class Game:
             drawImage(self.startButton, 210, 290)
             drawImage(self.howToPlayButton, 210, 350)
             drawImage(self.leaderboardButton, 210, 410)
-
-        elif self.paused:
-            drawLabel('Paused', 200, 200, size=20, fill='orange', bold=True)
         
         elif self.over:
             drawImage(self.gameOverBackground, 0,0)
-
             drawLabel(f'{self.score}', 250, 260, size=60, fill='white', bold=True)
-            drawImage(self.startOverButton, 200, 350)
+            drawImage(self.startOverButton, 200, 350)  
+
+        elif self.paused:
+            self.drawRoadBackground()
+            self.player.draw()
+            for coin in self.coins:
+                coin.draw()
+            if self.hole:
+                self.hole.draw()
+            drawLabel(f'Score: {self.score}', 250, 20, size=18, bold=True, fill="white")
+            drawLabel('Paused', 250, 60, size=24, fill='orange', bold=True)
+            drawImage(self.playButton, 410, 420)
         else:
             self.drawRoadBackground()
             self.player.draw()
@@ -335,6 +324,7 @@ class Game:
             if self.hole:
                 self.hole.draw()
             drawLabel(f'Score: {self.score}', 250, 20, size=18, bold=True, fill="white")
+            drawImage(self.pauseButton, 423, 433)
 
 def onAppStart(app):
     app.game = Game(app)
@@ -343,16 +333,18 @@ def onStep(app):
     app.game.update()
 
 def onKeyHold(app, keys):
-    if 'left' in keys:
-        app.game.movePlayer('left')
-    if 'right' in keys:
-        app.game.movePlayer('right')
-
-# def onKeyPress(app, key):
-#     if key == 'p':
-#         app.game.togglePause()
+    if app.game.started and not app.game.over and not app.game.paused: # cannot move player when paused
+        if 'left' in keys:
+            app.game.movePlayer('left')
+        if 'right' in keys:
+            app.game.movePlayer('right')
 
 def onMousePress(app, x, y):
+    if app.game.started and not app.game.over:
+        if 410 <= x <= 470 and 420 <= y <= 470:
+            app.game.togglePause()
+            return
+
     if app.game.tutorial:
         if 200 <= x <= 300 and 375 <= y <= 415:
             # Return to main menu

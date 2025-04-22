@@ -4,4 +4,3 @@ __pycache__/
 *.py[cod]
 .DS_Store
 src/cmu_graphics/
-my_scores.json
