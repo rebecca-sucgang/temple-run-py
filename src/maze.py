@@ -2,6 +2,15 @@ from cmu_graphics import *
 import random
 from collections import deque
 
+DIRS = {
+    'up'   : (-1,  0),
+    'right': ( 0,  1),
+    'down' : ( 1,  0),
+    'left' : ( 0, -1)
+}
+TURN_LEFT  = {'up':'left', 'left':'down', 'down':'right', 'right':'up'}
+TURN_RIGHT = {v:k for k, v in TURN_LEFT.items()}
+
 class Maze:
     def __init__(self, rows, cols, extra_exits=2):
         self.rows = rows
@@ -51,20 +60,29 @@ class Maze:
     def isPath(self, row, col):
         return self.grid[row][col] == 0
 
-    @staticmethod
-    def findShortestPath(maze):
-        start = maze.start
-        visited = [[False] * maze.cols for _ in range(maze.rows)]
-        parent = [[None] * maze.cols for _ in range(maze.rows)]
+class MazeSolver:
+    def __init__(self, maze, start=None):
+        self.maze = maze
+        self.rows = maze.rows
+        self.cols = maze.cols
+        self.grid = maze.grid
+        self.start = start if start else maze.start  # Use player's position if provided
+        self.exits = maze.exits
 
-        queue = deque()
+    def findShortestPath(self):
+        start = self.start
+        visited = [[False] * self.cols for _ in range(self.rows)]
+        parent = [[None] * self.cols for _ in range(self.rows)]
+
+        # Using a list as the queue
+        queue = []
         queue.append(start)
         visited[start[0]][start[1]] = True
 
         while queue:
-            row, col = queue.popleft()
+            row, col = queue.pop(0)  # Simulating popleft() using pop(0)
 
-            if (row, col) in maze.exits:
+            if (row, col) in self.exits:
                 path = []
                 while (row, col) != start:
                     path.append((row, col))
@@ -73,10 +91,10 @@ class Maze:
                 path.reverse()
                 return path
 
-            for drow, dcol in [(0,1), (1,0), (0,-1), (-1,0)]:
+            for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 new_row, new_col = row + drow, col + dcol
-                if (0 <= new_row < maze.rows and 0 <= new_col < maze.cols and
-                    maze.grid[new_row][new_col] == 0 and not visited[new_row][new_col]):
+                if (0 <= new_row < self.rows and 0 <= new_col < self.cols and
+                    self.grid[new_row][new_col] == 0 and not visited[new_row][new_col]):
                     visited[new_row][new_col] = True
                     parent[new_row][new_col] = (row, col)
                     queue.append((new_row, new_col))
@@ -92,6 +110,7 @@ class MazePlayer:
         self.y = None
         self.speed = 2
         self.moveDirection = None
+        self.facing = 'up'
 
     def updatePixelPosition(self, app):
         w, h = getCellSize(app)
@@ -99,8 +118,8 @@ class MazePlayer:
         self.y = app.boardTop + self.row * h + h / 2
 
     def canMove(self, direction, maze):
-        delta = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}
-        drow, dcol = delta[direction]
+        possibleDirections = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}
+        drow, dcol = possibleDirections[direction]
         newRow = self.row + drow
         newCol = self.col + dcol
         if (0 <= newRow < len(maze.grid) and 
@@ -140,7 +159,6 @@ class MazePlayer:
             self.x += dx
             self.y += dy
 
-
 def onAppStart(app):
     app.rows = 21
     app.cols = 21
@@ -153,8 +171,57 @@ def onAppStart(app):
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
+
+    # Create MazeSolver instance with the player's current position as start
+    app.shortestPathSolver = MazeSolver(app.maze, start=(app.player.row, app.player.col))
+
     app.showPath = False
-    app.shortestPath = Maze.findShortestPath(app.maze)
+    app.shortestPath = app.shortestPathSolver.findShortestPath()
+
+    app.SLICE_HEIGHT = app.height      #  full screen height
+    app.BASE_WIDTH   = app.width * 0.8 #  width of the nearest wall slice
+    app.NARROWING    = 0.65  
+
+def cellsInView(maze, row, col, facing, depth=4):
+    dr, dc = DIRS[facing]
+    leftDir  = DIRS[TURN_LEFT[facing]]
+    rightDir = DIRS[TURN_RIGHT[facing]]
+    result = []
+    for d in range(1, depth+1):
+        r, c = row+dr*d, col+dc*d
+        # front cell
+        result.append(('front', d, maze.isPath(r,c)))
+        # left wall of that slice
+        lr, lc = r+leftDir[0], c+leftDir[1]
+        result.append(('left', d, not maze.isPath(lr,lc)))
+        # right wall
+        rr, rc = r+rightDir[0], c+rightDir[1]
+        result.append(('right', d, not maze.isPath(rr,rc)))
+        if not maze.isPath(r,c): break   # hit solid wall
+    return result
+
+def drawFirstPerson(app):
+    view = cellsInView(app.maze,
+                       app.player.row,
+                       app.player.col,
+                       app.player.facing)
+    horizonY = app.height / 2
+
+    # Draw farthest slices first so closer ones cover them
+    for where, d, isWall in sorted(view, key=lambda x: -x[1]):   # far → near
+        if not isWall:
+            continue
+
+        w = app.BASE_WIDTH * (app.NARROWING ** (d - 1))
+        h = app.SLICE_HEIGHT * (app.NARROWING ** (d - 1))
+        cx = app.width / 2
+        if where == 'left':
+            cx -= w / 2
+        elif where == 'right':
+            cx += w / 2
+        # front stays centered
+        drawRect(cx - w / 2, horizonY - h / 2, w, h,
+                 fill='dimgray', border='black')
 
 def redrawAll(app):
     drawLabel('Maze Game (arrow keys to move, r = reset, p = path)', 250, 30, size=14)
