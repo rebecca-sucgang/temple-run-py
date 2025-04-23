@@ -57,27 +57,23 @@ class Maze:
         return self.grid[row][col] == 0
 
 class MazeSolver:
-    def __init__(self, maze, start=None):
+    def __init__(self, maze):
         self.maze = maze
         self.rows = maze.rows
         self.cols = maze.cols
         self.grid = maze.grid
-        self.start = start if start else maze.start  # using player's position if provided
         self.exits = maze.exits
 
-    def findShortestPath(self):
-        start = self.start
+    def findShortestPath(self, start):
         visited = [[False] * self.cols for _ in range(self.rows)]
         parent = [[None] * self.cols for _ in range(self.rows)]
 
-        # Breadth‑first search (BFS) queue; list with pop(0) ≈ deque.popleft()
-        path = []
-        path.append(start)
+        # Breadth‑first search (BFS) queue
+        path = [start]
         visited[start[0]][start[1]] = True
 
         while path:
-            row, col = path.pop(0)  # Simulating popleft() using pop(0)
-            # Exit found → backtrack to reconstruct path
+            row, col = path.pop(0)
             if (row, col) in self.exits:
                 path = []
                 while (row, col) != start:
@@ -85,9 +81,8 @@ class MazeSolver:
                     row, col = parent[row][col]
                 path.append(start)
                 path.reverse()
-                return path  # Shortest path (BFS guarantees minimal steps)
-            
-            # Explores 4‑neighbour cells
+                return path
+
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 new_row, new_col = row + drow, col + dcol
                 if (0 <= new_row < self.rows and 0 <= new_col < self.cols and
@@ -95,8 +90,8 @@ class MazeSolver:
                     visited[new_row][new_col] = True
                     parent[new_row][new_col] = (row, col)
                     path.append((new_row, new_col))
-        return [] # like return None -> no path is reachable from the start
-
+        return []  # No path found
+    
 class MazePlayer:
     def __init__(self, row, col):
         self.row = row
@@ -141,6 +136,9 @@ class MazePlayer:
 
         if not self.canMove(self.moveDirection, app.maze):
             return
+        
+        if (targetRow, targetCol) in app.maze.exits:
+            onAppStart(app)
 
         tx = app.boardLeft + targetCol * w + w / 2
         ty = app.boardTop + targetRow * h + h / 2
@@ -150,6 +148,7 @@ class MazePlayer:
             self.row = targetRow
             self.col = targetCol
             self.updatePixelPosition(app)
+            app.shortestPath = app.shortestPathSolver.findShortestPath((self.row, self.col))
         else:
             self.x += dx
             self.y += dy
@@ -166,19 +165,36 @@ def onAppStart(app):
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
-    app.shortestPathSolver = MazeSolver(app.maze, start=(app.player.row, app.player.col))
+    app.shortestPathSolver = MazeSolver(app.maze)
 
     app.showPath = False
-    app.shortestPath = app.shortestPathSolver.findShortestPath()
+    app.shortestPath = app.shortestPathSolver.findShortestPath((app.player.row, app.player.col))
+
+    # made quit button with chatGPT
+    app.quitButton = {'x': app.width - 150, 'y': app.height - 400, 'width': 100, 'height': 40}
+
+# Draw the quit button
+def drawQuitButton(app):
+    drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], 
+             fill='red', border='black', borderWidth=2)
+    drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, 
+              app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='white')
+
+# Check if the mouse click is within the quit button area
+def onMousePress(app, mouseX, mouseY):
+    if (app.quitButton['x'] <= mouseX <= app.quitButton['x'] + app.quitButton['width'] and
+        app.quitButton['y'] <= mouseY <= app.quitButton['y'] + app.quitButton['height']):
+        app.quit()  
 
 def redrawAll(app):
-    drawMazeZoomed(app)   # Zoomed-in 3x3 view on the left half (250x500)
-    drawMaze(app)         # Full maze at bottom-right (250x250)
+    drawMazeZoomed(app) 
+    drawMaze(app)      
     if app.showPath:
         drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
+    drawQuitButton(app)
 
+# Full maze at bottom-right (250x250)
 def drawMaze(app):
-    # Full maze at bottom-right (250x250)
     miniSize = 250
     xOffset = app.width - miniSize
     yOffset = app.height - miniSize
@@ -204,8 +220,8 @@ def drawMaze(app):
     cy = yOffset + pr * cellH + cellH / 2
     drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
 
+# Draw the shortest path on the mini maze (same as the full maze but scaled down)
 def drawShortestPathMiniMaze(app, xOffset, yOffset, cellW, cellH):
-    # Draw the shortest path on the mini maze (same as the full maze but scaled down)
     for (r, c) in app.shortestPath:
         x = xOffset + c * cellW
         y = yOffset + r * cellH
@@ -216,10 +232,11 @@ def drawShortestPathMiniMaze(app, xOffset, yOffset, cellW, cellH):
     cy = yOffset + pr * cellH + cellH / 2
     drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
 
+# Zoomed-in 3x3 view on the left half (250x500)
 def drawMazeZoomed(app):
     zoomRows, zoomCols = 3, 3
-    zoomW = app.width / 2 / zoomCols  # 250x500 screen, left half takes 250 pixels
-    zoomH = app.height / zoomRows     # 250 pixels height for the 3x3 zoomed view
+    zoomW = app.width / 2 / zoomCols  
+    zoomH = app.height / zoomRows   
     xOffset = 0
     yOffset = 0
 
@@ -280,8 +297,14 @@ def onKeyHold(app, keys):
     for direction in ['up', 'down', 'left', 'right']:
         if direction in keys:
             app.player.moveDirection = direction
+            app.player.moveDistance = 2 
             return
     app.player.moveDirection = None
+
+def onKeyRelease(app, key):
+    # Stop the player when the key is released
+    app.player.moveDirection = None
+    app.player.moveDistance = 1
 
 def onStep(app):
     app.player.moveStep(app)
