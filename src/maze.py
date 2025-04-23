@@ -6,8 +6,8 @@ class Maze:
     def __init__(self, rows, cols, extra_exits=2):
         self.rows = rows
         self.cols = cols
-        self.grid = [[1 for _ in range(cols)] for _ in range(rows)]
-        self.visited = [[False for _ in range(cols)] for _ in range(rows)]
+        self.grid = [[1 for j in range(cols)] for _ in range(rows)]
+        self.visited = [[False for i in range(cols)] for _ in range(rows)]
         self.start = (1, 1)
         self.end = (rows - 2, cols - 2)
         self.exits = [self.end]
@@ -25,25 +25,25 @@ class Maze:
         random.shuffle(directions) # Randomize for a organic maze
 
         for dr, dc in directions:
-            new_row, new_col = row + dr, col + dc
-            # Legality: Stay inside the outer border of walls (index 0 and last index stay solid)
-            if 1 <= new_row < self.rows - 1 and 1 <= new_col < self.cols - 1:
-                if not self.visited[new_row][new_col]:
+            newRow, newCol = row + dr, col + dc
+            # Legality Check: Stay inside the outer border of walls
+            if 1 <= newRow < self.rows - 1 and 1 <= newCol < self.cols - 1:
+                if not self.visited[newRow][newCol]:
                     self.grid[row + dr // 2][col + dc // 2] = 0
-                    self.generateMaze(new_row, new_col)
+                    self.generateMaze(newRow, newCol)
 
     def addExtraExits(self, count):
-        # Collect every wall cell on the border that sits next to an interior path (0)
+        # Collect every wall cell on the border that sits next to (0)
         edges = []
         for r in range(1, self.rows - 1):
-            if self.grid[r][1] == 0: # possible left border candidate 
+            if self.grid[r][1] == 0: 
                 edges.append((r, 0))
-            if self.grid[r][self.cols - 2] == 0: # possible right border condidate
+            if self.grid[r][self.cols - 2] == 0: 
                 edges.append((r, self.cols - 1))
         for c in range(1, self.cols - 1):
-            if self.grid[1][c] == 0: # possible top border candidate
+            if self.grid[1][c] == 0: 
                 edges.append((0, c))
-            if self.grid[self.rows - 2][c] == 0: # possible bottom border candidate
+            if self.grid[self.rows - 2][c] == 0: 
                 edges.append((self.rows - 1, c))
 
         random.shuffle(edges) # to randomize the exits we open up
@@ -64,11 +64,11 @@ class MazeSolver:
         self.grid = maze.grid
         self.exits = maze.exits
 
-    def findShortestPath(self, start):
-        visited = [[False] * self.cols for _ in range(self.rows)]
-        parent = [[None] * self.cols for _ in range(self.rows)]
+    def findShortPath(self, start):
+        visited = [[False] * self.cols for i in range(self.rows)]
+        parent = [[None] * self.cols for j in range(self.rows)]
 
-        # Breadth‑first search (BFS) queue
+        # Inspired by (BFS): https://www.youtube.com/watch?v=W9F8fDQj7Ok&t=217s
         path = [start]
         visited[start[0]][start[1]] = True
 
@@ -84,12 +84,13 @@ class MazeSolver:
                 return path
 
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                new_row, new_col = row + drow, col + dcol
-                if (0 <= new_row < self.rows and 0 <= new_col < self.cols and
-                    self.grid[new_row][new_col] == 0 and not visited[new_row][new_col]):
-                    visited[new_row][new_col] = True
-                    parent[new_row][new_col] = (row, col)
-                    path.append((new_row, new_col))
+                newRow, newCol = row + drow, col + dcol
+                if (0 <= newRow < self.rows and 0 <= newCol < self.cols and
+                    self.grid[newRow][newCol] == 0 and 
+                    not visited[newRow][newCol]):
+                    visited[newRow][newCol] = True
+                    parent[newRow][newCol] = (row, col)
+                    path.append((newRow, newCol))
         return []  # No path found
     
 class MazePlayer:
@@ -108,7 +109,10 @@ class MazePlayer:
         self.y = app.boardTop + self.row * h + h / 2
 
     def canMove(self, direction, maze):
-        possibleDirections = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}
+        possibleDirections = {'up': (-1, 0), 
+                              'down': (1, 0), 
+                              'left': (0, -1), 
+                              'right': (0, 1)}
         drow, dcol = possibleDirections[direction]
         newRow = self.row + drow
         newCol = self.col + dcol
@@ -150,7 +154,7 @@ class MazePlayer:
             self.row = targetRow
             self.col = targetCol
             self.updatePixelPosition(app)
-            app.shortestPath = app.shortestPathSolver.findShortestPath((self.row, self.col))
+            app.shortPath = app.pathSolv.findShortPath((self.row, self.col))
         else:
             self.x += dx
             self.y += dy
@@ -163,8 +167,10 @@ def onAppStart(app):
     app.boardWidth = 400
     app.boardHeight = 400
     app.cellBorderWidth = 1
-    # From ChatGPT after debugging app.mazesSolved problem
+
+    # Citation: ChatGPT after debugging app.mazesSolved problem
     app.mazesSolved = getattr(app, 'mazesSolved', 0)
+
     app.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
     app.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
     app.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))
@@ -172,25 +178,32 @@ def onAppStart(app):
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
-    app.shortestPathSolver = MazeSolver(app.maze)
+    app.pathSolv = MazeSolver(app.maze)
 
     app.showPath = False
-    app.shortestPath = app.shortestPathSolver.findShortestPath((app.player.row, app.player.col))
+    app.shortPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
 
-    # made quit button with chatGPT
-    app.quitButton = {'x': app.width - 150, 'y': app.height - 400, 'width': 100, 'height': 40}
+    # Citation: made quit button with chatGPT
+    app.quitButton = {'x': app.width - 150, 
+                      'y': app.height - 400, 
+                      'width': 100, 
+                      'height': 40}
 
 # Draw the quit button
 def drawQuitButton(app):
-    drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], 
-             fill='red', border='sienna', borderWidth=2)
+    drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], 
+             app.quitButton['height'], fill='red', border='sienna', 
+             borderWidth=2)
     drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, 
-              app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='beige')
+              app.quitButton['y'] + app.quitButton['height'] / 2, 
+              font='Arial 16 bold', fill='beige')
 
 # Check if the mouse click is within the quit button area
 def onMousePress(app, mouseX, mouseY):
-    if (app.quitButton['x'] <= mouseX <= app.quitButton['x'] + app.quitButton['width'] and
-        app.quitButton['y'] <= mouseY <= app.quitButton['y'] + app.quitButton['height']):
+    addedX = app.quitButton['x'] + app.quitButton['width']
+    addedY = app.quitButton['y'] + app.quitButton['height']
+    if (app.quitButton['x'] <= mouseX <= addedX and
+        app.quitButton['y'] <= mouseY <= addedY):
         app.quit()  
 
 def redrawAll(app):
@@ -199,7 +212,8 @@ def redrawAll(app):
     if app.showPath:
         drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
     drawQuitButton(app)
-    drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, fill = "black", size = 15, bold = True)
+    drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, 
+              fill = "black", size = 15, bold = True)
 
 # Full maze at bottom-right (250x250)
 def drawMaze(app):
@@ -213,14 +227,16 @@ def drawMaze(app):
         for col in range(app.cols):
             x = xOffset + col * cellW
             y = yOffset + row * cellH
-            # Determine color based on the cell type (start, exit, wall, or free space)
+            # Determine color based on the cell type 
             if (row, col) in app.maze.exits:
                 drawImage(app.mazeEndImage, x, y, width=cellW, height=cellH)
             else:
                 if app.maze.grid[row][col] == 1:
-                    drawImage(app.mazeBorderImage, x, y, width=cellW, height=cellH)
+                    drawImage(app.mazeBorderImage, x, y, width=cellW, 
+                              height=cellH)
                 else:
-                    drawImage(app.mazePathImage, x, y, width=cellW, height=cellH)
+                    drawImage(app.mazePathImage, x, y, width=cellW, 
+                              height=cellH)
 
 
     # Player in mini maze
@@ -229,12 +245,13 @@ def drawMaze(app):
     cy = yOffset + pr * cellH + cellH / 2
     drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
 
-# Draw the shortest path on the mini maze (same as the full maze but scaled down)
+# Draw the shortest path on the mini maze 
 def drawShortestPathMiniMaze(app, xOffset, yOffset, cellW, cellH):
     for (r, c) in app.shortestPath:
         x = xOffset + c * cellW
         y = yOffset + r * cellH
-        drawRect(x + 2, y + 2, cellW - 4, cellH - 4, fill=None, border='red', borderWidth=2)
+        drawRect(x + 2, y + 2, cellW - 4, cellH - 4, fill=None, 
+                 border='red', borderWidth=2)
     # Player in mini maze
     pr, pc = int(app.player.row), int(app.player.col)
     cx = xOffset + pc * cellW + cellW / 2
@@ -270,13 +287,16 @@ def drawMazeZoomed(app):
                 drawImage(app.mazeEndImage, x, y, width=zoomW, height=zoomH)
             else:
                 if app.maze.grid[row][col] == 1:
-                    drawImage(app.mazeBorderImage, x, y, width=zoomW, height=zoomH)
+                    drawImage(app.mazeBorderImage, x, y, width=zoomW, 
+                              height=zoomH)
                 else:
-                    drawImage(app.mazePathImage, x, y, width=zoomW, height=zoomH)
+                    drawImage(app.mazePathImage, x, y, width=zoomW, 
+                              height=zoomH)
 
             # Draw red path dot if applicable
             if app.showPath and (row, col) in app.shortestPath:
-                drawCircle(x + zoomW/2, y + zoomH/2, min(zoomW, zoomH)//5, fill='red')
+                drawCircle(x + zoomW/2, y + zoomH/2, min(zoomW, zoomH)//5, 
+                           fill='red')
     drawPlayerZoomed(app, startRow, startCol, zoomW, zoomH, xOffset, yOffset)
 
 # Draw player in zoomed view
