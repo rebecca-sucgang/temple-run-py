@@ -101,7 +101,31 @@ class MazePlayer:
         self.y = None
         self.speed = 2
         self.moveDirection = None
-        self.facing = 'up'
+        self.facing = 'down'
+
+        # asked help from chatgpt on how to include sprites
+        self.frameIndex = 0
+        self.tick = 0
+        self.frameCount = 5
+        self.frameWidth = 50
+        self.frameHeight = 50
+        self.zoomDisplaySize = 40
+        self.miniDisplaySize = 10
+
+        self.sprites = {
+            'up': PILImage.open('src/images/sprites/runup.png'),
+            'down': PILImage.open('src/images/sprites/rundown-removebg.png'),
+            'left': PILImage.open('src/images/sprites/runleft.png'),
+            'right': PILImage.open('src/images/sprites/runright.png'),
+        }   
+
+    def getCurrentFrame(self, displaySize): # asked ChatGPT for help
+        spriteSheet = self.sprites[self.facing] # which direction in dictionary
+        left = self.frameIndex * self.frameWidth
+        top = 0
+        cropped = spriteSheet.crop((left, top, left + self.frameWidth, self.frameHeight))
+        resized = cropped.resize((displaySize, displaySize))
+        return CMUImage(resized)
 
     def updatePixelPosition(self, app):
         w, h = getCellSize(app)
@@ -124,6 +148,12 @@ class MazePlayer:
 
     def moveStep(self, app):
         if not self.moveDirection: return
+        
+        self.facing = self.moveDirection  # Update facing direction
+        self.tick += 1
+        if self.tick % 5 == 0:
+            self.frameIndex = (self.frameIndex + 1) % self.frameCount
+        
         w, h = getCellSize(app)
         dx = dy = 0
         if self.moveDirection == 'up': dy = -self.speed
@@ -243,7 +273,10 @@ def drawMaze(app):
     pr, pc = int(app.player.row), int(app.player.col)
     cx = xOffset + pc * cellW + cellW / 2
     cy = yOffset + pr * cellH + cellH / 2
-    drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
+    # drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
+    frame = app.player.getCurrentFrame(app.player.miniDisplaySize)
+    drawImage(frame, cx - app.player.miniDisplaySize // 2, 
+              cy - app.player.miniDisplaySize // 2)
 
 # Draw the shortest path on the mini maze 
 def drawShortestPathMiniMaze(app, xOffset, yOffset, cellW, cellH):
@@ -305,10 +338,14 @@ def drawPlayerZoomed(app, startRow, startCol, zoomW, zoomH, xOffset, yOffset):
     i = pr - startRow
     j = pc - startCol
     if 0 <= i < 3 and 0 <= j < 3:
-        cx = xOffset + j * zoomW + zoomW / 2
-        cy = yOffset + i * zoomH + zoomH / 2
-        r = min(zoomW, zoomH) // 3
-        drawCircle(cx, cy, r, fill='red')
+        # cx = xOffset + j * zoomW + zoomW / 2
+        # cy = yOffset + i * zoomH + zoomH / 2
+        # r = min(zoomW, zoomH) // 3
+        # drawCircle(cx, cy, r, fill='red')
+        frame = app.player.getCurrentFrame(app.player.zoomDisplaySize)
+        drawImage(frame,
+                  xOffset + j * zoomW + (zoomW - app.player.zoomDisplaySize) // 2,
+                  yOffset + i * zoomH + (zoomH - app.player.zoomDisplaySize) // 2)
 
 def drawShortestPath(app):
     for (r, c) in app.shortestPath:

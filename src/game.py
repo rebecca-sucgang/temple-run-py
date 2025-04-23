@@ -4,7 +4,6 @@ from PIL import Image as PILImage
 from ui_assets import UIBackground, UIButton
 import json
 
-
 # added leaderboard code by pranav
 def loadScoresFromFile():
     try:
@@ -353,68 +352,94 @@ class Game:
         if self.musicPaused:
             drawLine(20, 430, 70, 480, fill='red', lineWidth=4)
 
+    # organized draw helper functions
+    def drawTutorial(self):
+        drawImage(self.UIBackground.tutorialNormal, 0, 0)
+        drawImage(self.UIButton.backButton, 110, 410)
+        self.drawSoundIcon()
+
+    def drawMazeTutorial(self):
+        drawImage(self.UIBackground.tutorialMaze, 0, 0)
+        drawImage(self.UIButton.backButton, 110, 410)
+        self.drawSoundIcon()
+
+    def drawSelectingMode(self):
+        drawImage(self.UIBackground.startBackground, 0,0)
+        drawImage(self.UIButton.normalModeButton, 200, 285)
+        drawImage(self.UIButton.mazeModeButton, 200, 350)
+        drawImage(self.UIButton.backButton, 215, 415)
+        self.drawSoundIcon()
+
+    def drawLeaderboard(self):
+        # added pranav's code here
+        self.leaderShipBoard()
+        drawImage(self.UIButton.backButton, 200, 410)
+        self.drawSoundIcon()
+    
+    def drawNotStarted(self):
+        drawImage(self.UIBackground.startBackground, 0,0)
+        drawImage(self.UIButton.startButton, 210, 290)
+        drawImage(self.UIButton.howToPlayButton, 210, 350)
+        drawImage(self.UIButton.leaderboardButton, 210, 410)
+        self.drawSoundIcon()
+
+    def drawOver(self):
+        drawImage(self.UIBackground.gameOverBackground, 0,0)
+        drawLabel(f'{self.score}', 250, 260, 
+                    size=60, fill='white', bold=True)
+        drawImage(self.UIButton.startOverButton, 200, 350)
+        self.drawSoundIcon()
+
+    def drawPaused(self):
+        self.drawRoadBackground()
+        self.player.draw()
+        for coin in self.coins:
+            coin.draw()
+        if self.hole:
+            self.hole.draw()
+        drawLabel(f'Score: {self.score}', 250, 20, 
+                    size=18, bold=True, fill="white")
+        drawLabel('Paused', 250, 60, 
+                    size=24, fill='orange', bold=True)
+        drawImage(self.UIButton.playButton, 410, 420)
+        self.drawSoundIcon()
+
+    def drawActualGame(self):
+        self.drawRoadBackground()
+        self.player.draw()
+        for coin in self.coins:
+            coin.draw()
+        if self.hole:
+            self.hole.draw()
+        drawLabel(f'Score: {self.score}', 250, 20, 
+                    size=18, bold=True, fill="white")
+        drawImage(self.UIButton.pauseButton, 423, 433)
+        self.drawSoundIcon()
+
     def draw(self):
         if self.tutorial:
-            drawImage(self.UIBackground.tutorialNormal, 0, 0)
-            drawImage(self.UIButton.backButton, 110, 410)
-            self.drawSoundIcon()
+            self.drawTutorial()
         
         elif self.mazeTutorial:
-            drawImage(self.UIBackground.tutorialMaze, 0, 0)
-            drawImage(self.UIButton.backButton, 110, 410)
-            self.drawSoundIcon()
+            self.drawMazeTutorial()
         
         elif self.selectingMode:
-            drawImage(self.UIBackground.startBackground, 0,0)
-            drawImage(self.UIButton.normalModeButton, 200, 285)
-            drawImage(self.UIButton.mazeModeButton, 200, 350)
-            drawImage(self.UIButton.backButton, 215, 415)
-            self.drawSoundIcon()
+            self.drawSelectingMode()
 
-        elif self.leaderboard: # pranav
-            # added pranav's code here
-            self.leaderShipBoard()
-            drawImage(self.UIButton.backButton, 200, 410)
-            self.drawSoundIcon()
+        elif self.leaderboard:
+            self.drawLeaderboard()
 
         elif not self.started:
-            drawImage(self.UIBackground.startBackground, 0,0)
-            drawImage(self.UIButton.startButton, 210, 290)
-            drawImage(self.UIButton.howToPlayButton, 210, 350)
-            drawImage(self.UIButton.leaderboardButton, 210, 410)
-            self.drawSoundIcon()
+            self.drawNotStarted()
         
         elif self.over:
-            drawImage(self.UIBackground.gameOverBackground, 0,0)
-            drawLabel(f'{self.score}', 250, 260, 
-                      size=60, fill='white', bold=True)
-            drawImage(self.UIButton.startOverButton, 200, 350)
-            self.drawSoundIcon()
+            self.drawOver()
 
         elif self.paused:
-            self.drawRoadBackground()
-            self.player.draw()
-            for coin in self.coins:
-                coin.draw()
-            if self.hole:
-                self.hole.draw()
-            drawLabel(f'Score: {self.score}', 250, 20, 
-                      size=18, bold=True, fill="white")
-            drawLabel('Paused', 250, 60, 
-                      size=24, fill='orange', bold=True)
-            drawImage(self.UIButton.playButton, 410, 420)
-            self.drawSoundIcon()
+            self.drawPaused()
+
         else:
-            self.drawRoadBackground()
-            self.player.draw()
-            for coin in self.coins:
-                coin.draw()
-            if self.hole:
-                self.hole.draw()
-            drawLabel(f'Score: {self.score}', 250, 20, 
-                      size=18, bold=True, fill="white")
-            drawImage(self.UIButton.pauseButton, 423, 433)
-            self.drawSoundIcon()
+            self.drawActualGame()
 
 def onAppStart(app):
     app.game = Game(app)
@@ -450,7 +475,7 @@ def onMousePress(app, x, y):
             # Return to main menu
             app.game.tutorial = False
         if __ <= x <= __ and 410 <= y <= 460:
-            
+            pass
 
     elif app.game.leaderboard: 
         if 20 <= x <= 80 and 420 <= y <= 480:
