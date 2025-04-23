@@ -45,9 +45,9 @@ class UIButton:
         self.startOverButton = CMUImage(
             PILImage.open('src/images/buttons/startover.png'))
         self.leftArrowButton = CMUImage(
-            PILImage.open('src/images/buttons/leftarrow.png').resize((40, 40)))
+            PILImage.open('src/images/buttons/leftarrow.png').resize((46, 46)))
         self.rightArrowButton = CMUImage(
-            PILImage.open('src/images/buttons/rightarrow.png'))
+            PILImage.open('src/images/buttons/rightarrow.png').resize((46, 46)))
         
 class UIMazeBlock:
     def __init__(self):
