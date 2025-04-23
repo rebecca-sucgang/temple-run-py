@@ -14,8 +14,11 @@ mdtaylor
 ------------------------------------>
 
 Pranav Srinivas (pranavsr)
-- Designed the leadership board (ChatGPT help)
-- Worked on 2.5D Graphics
+- Designed the leadership board (with ChatGPT guidance)
+- Included the magnetic powerup (with ChatGPT guidance)
+- Wrote code to retrieve the max score and most recent score
+- Wrote distance function to be incorporated into the code (to allow coin attraction when magnet is activated)
+- Worked on 2.5D graphics
 - Storyboarded
 
 
