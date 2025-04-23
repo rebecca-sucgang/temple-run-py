@@ -138,7 +138,9 @@ class MazePlayer:
             return
         
         if (targetRow, targetCol) in app.maze.exits:
+            app.mazesSolved += 1
             onAppStart(app)
+            return
 
         tx = app.boardLeft + targetCol * w + w / 2
         ty = app.boardTop + targetRow * h + h / 2
@@ -161,6 +163,8 @@ def onAppStart(app):
     app.boardWidth = 400
     app.boardHeight = 400
     app.cellBorderWidth = 1
+    # From ChatGPT after debugging app.mazesSolved problem
+    app.mazesSolved = getattr(app, 'mazesSolved', 0)
     app.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
     app.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
     app.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))
@@ -195,6 +199,7 @@ def redrawAll(app):
     if app.showPath:
         drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
     drawQuitButton(app)
+    drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, fill = "black", size = 15, bold = True)
 
 # Full maze at bottom-right (250x250)
 def drawMaze(app):

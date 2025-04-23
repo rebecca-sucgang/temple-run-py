@@ -25,7 +25,7 @@ Indu Arimilli (iarimill)
 - Worked on 2.5D Graphics
     Contributions (4/19):
     - Maze Generation Algorithm (maze.py)
-    - DFS Pathfinding Algorithm
+    - DFS Pathfinding Algorithm (maze.py)
     - Working on UI for maze generation algorithm 
 
 Rebecca Sucgang (rsucgang)
