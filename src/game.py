@@ -436,11 +436,14 @@ class Game:
         drawImage(self.UIBackground.tutorialNormal, 0, 0)
         drawImage(self.UIButton.backButton, 110, 410)
         drawImage(self.UIButton.leftArrowButton, 300, 410)
+        drawImage(self.UIButton.rightArrowButton, 355, 410)
         self.drawSoundIcon()
 
     def drawMazeTutorial(self):
         drawImage(self.UIBackground.tutorialMaze, 0, 0)
         drawImage(self.UIButton.backButton, 110, 410)
+        drawImage(self.UIButton.leftArrowButton, 300, 410)
+        drawImage(self.UIButton.rightArrowButton, 355, 410)
         self.drawSoundIcon()
 
     def drawSelectingMode(self):
@@ -577,8 +580,25 @@ def onMousePress(app, x, y):
             if 110 <= x <= 210 and 410 <= y <= 450:
                 # Return to main menu
                 app.mainGame.tutorial = False
-            # if __ <= x <= __ and 410 <= y <= 460:
-            #     pass
+            if 300 <= x <= 350 and 410 <= y <= 460:
+                app.mainGame.tutorial = True
+                app.mainGame.mazeTutorial = False
+            if 355 <= x <= 405 and 410 <= y <= 460:
+                app.mainGame.mazeTutorial = True
+                app.mainGame.tutorial = False
+
+        elif app.mainGame.mazeTutorial:
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            if 110 <= x <= 210 and 410 <= y <= 450:
+                # Return to main menu
+                app.mainGame.mazeTutorial = False
+            if 300 <= x <= 350 and 410 <= y <= 460:
+                app.mainGame.tutorial = True
+                app.mainGame.mazeTutorial = False
+            if 355 <= x <= 405 and 410 <= y <= 460:
+                app.mainGame.mazeTutorial = True
+                app.mainGame.tutorial = False
 
         elif app.mainGame.leaderboard: 
             if 20 <= x <= 80 and 420 <= y <= 480:
