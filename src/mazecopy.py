@@ -152,7 +152,7 @@ class MazePlayer:
             self.row = targetRow
             self.col = targetCol
             self.updatePixelPosition(app)
-            app.shortestPath = app.shortestPathSolver.shortestPath((self.row, self.col))
+            app.shortestPath = app.shortPath.shortestPath((self.row, self.col))
         else:
             self.x += dx
             self.y += dy
@@ -169,10 +169,11 @@ def onAppStart(app):
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
     app.player.updatePixelPosition(app)
-    app.shortestPathSolver = MazeSolver(app.maze)
+    app.shortPath = MazeSolver(app.maze)
 
     app.showPath = False
-    app.shortestPath = app.shortestPathSolver.shortestPath((app.player.row, app.player.col))
+    testy = app.shortPath.shortestPath((app.player.row, app.player.col))
+    app.shortestPath = testy
 
     # made quit button with chatGPT
     app.quitButton = {'x': app.width - 150, 
@@ -183,15 +184,17 @@ def onAppStart(app):
 # Draw the quit button
 def drawQuitButton(app):
     drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], 
-             app.quitButton['height'], fill='red', border='black', borderWidth=2)
+             app.quitButton['height'], fill='red', border='black')
     drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, 
               app.quitButton['y'] + app.quitButton['height'] / 2, 
               font='Arial 16 bold', fill='white')
 
 # Check if the mouse click is within the quit button area
 def onMousePress(app, mouseX, mouseY):
-    if (app.quitButton['x'] <= mouseX <= app.quitButton['x'] + app.quitButton['width'] and
-        app.quitButton['y'] <= mouseY <= app.quitButton['y'] + app.quitButton['height']):
+    addedX = app.quitButton['x'] + app.quitButton['width']
+    addedY = app.quitButton['y'] + app.quitButton['height']
+    if (app.quitButton['x'] <= mouseX <= addedX and
+        app.quitButton['y'] <= mouseY <= addedY):
         app.quit()  
 
 def redrawAll(app):
@@ -213,14 +216,14 @@ def drawMaze(app):
         for col in range(app.cols):
             x = xOffset + col * cellW
             y = yOffset + row * cellH
-            # Determine color based on the cell type (start, exit, wall, or free space)
+            # Determine color based on the cell type
             if (row, col) == app.maze.start:
                 color = 'lightgreen'
             elif (row, col) in app.maze.exits:
                 color = 'gold'
             else:
                 color = 'black' if app.maze.grid[row][col] == 1 else 'white'
-            drawRect(x, y, cellW, cellH, fill=color, border='gray', borderWidth=1)
+            drawRect(x,y,cellW,cellH,fill=color,border='gray',borderWidth=1)
 
     # Player in mini maze
     pr, pc = int(app.player.row), int(app.player.col)
@@ -228,12 +231,13 @@ def drawMaze(app):
     cy = yOffset + pr * cellH + cellH / 2
     drawCircle(cx, cy, min(cellW, cellH) // 3, fill='red')
 
-# Draw the shortest path on the mini maze (same as the full maze but scaled down)
+# Draw the shortest path on the mini maze (smaller than the full maze)
 def drawShortestPathMiniMaze(app, xOffset, yOffset, cellW, cellH):
     for (r, c) in app.shortestPath:
         x = xOffset + c * cellW
         y = yOffset + r * cellH
-        drawRect(x + 2, y + 2, cellW - 4, cellH - 4, fill=None, border='red', borderWidth=2)
+        drawRect(x + 2, y + 2, cellW - 4, cellH - 4, fill=None, 
+                 border='red', borderWidth=2)
     # Player in mini maze
     pr, pc = int(app.player.row), int(app.player.col)
     cx = xOffset + pc * cellW + cellW / 2
@@ -271,11 +275,13 @@ def drawMazeZoomed(app):
                 color = 'gold'
             else:
                 color = 'black' if app.maze.grid[row][col] == 1 else 'white'
-            drawRect(x, y, zoomW, zoomH, fill=color, border='gray', borderWidth=app.cellBorderWidth)
+            drawRect(x, y, zoomW, zoomH, fill=color, border='gray', 
+                     borderWidth=app.cellBorderWidth)
 
             # Draw red path dot if applicable
             if app.showPath and (row, col) in app.shortestPath:
-                drawCircle(x + zoomW/2, y + zoomH/2, min(zoomW, zoomH)//5, fill='red')
+                drawCircle(x + zoomW/2, y + zoomH/2, min(zoomW, zoomH)//5, 
+                           fill='red')
     drawPlayerZoomed(app, startRow, startCol, zoomW, zoomH, xOffset, yOffset)
 
 # Draw player in zoomed view
