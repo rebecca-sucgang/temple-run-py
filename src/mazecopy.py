@@ -172,7 +172,9 @@ class MazePlayer:
             return
         
         if (targetRow, targetCol) in app.maze.exits:
+            app.mazesSolved += 1
             onAppStart(app)
+            return
 
         tx = app.boardLeft + targetCol * w + w / 2
         ty = app.boardTop + targetRow * h + h / 2
@@ -385,3 +387,7 @@ def getCellCenter(app, row, col):
     w, h = getCellSize(app)
     return x + w/2, y + h/2
 
+def main():
+    runApp(width=500, height=500)
+
+main()
