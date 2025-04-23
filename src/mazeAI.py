@@ -64,24 +64,40 @@ class MazeSolver:
         self.grid = maze.grid
         self.exits = maze.exits
 
-    def shortestPath(self, start):
+    def findShortPath(self, start):
         visited = [[False] * self.cols for i in range(self.rows)]
         parent = [[None] * self.cols for j in range(self.rows)]
 
-        # Breadth‑first search (BFS) queue
         path = [start]
         visited[start[0]][start[1]] = True
 
         while path:
             row, col = path.pop(0)
             if (row, col) in self.exits:
-                path = []
+                # Reconstruct the path
+                full_path = []
                 while (row, col) != start:
-                    path.append((row, col))
+                    full_path.append((row, col))
                     row, col = parent[row][col]
-                path.append(start)
-                path.reverse()
-                return path
+                full_path.append(start)
+                full_path.reverse()
+
+                # Generate direction to steps mapping
+                direction_steps = {'up': [], 'down': [], 'left': [], 'right': []}
+                for i in range(1, len(full_path)):
+                    r1, c1 = full_path[i - 1]
+                    r2, c2 = full_path[i]
+                    if r2 == r1 - 1:
+                        direction_steps['up'].append(i)
+                    elif r2 == r1 + 1:
+                        direction_steps['down'].append(i)
+                    elif c2 == c1 - 1:
+                        direction_steps['left'].append(i)
+                    elif c2 == c1 + 1:
+                        direction_steps['right'].append(i)
+
+                self.direction_steps = direction_steps  # You can access this from app.pathSolv.direction_steps
+                return full_path
 
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 newRow, newCol = row + drow, col + dcol
@@ -91,7 +107,8 @@ class MazeSolver:
                     visited[newRow][newCol] = True
                     parent[newRow][newCol] = (row, col)
                     path.append((newRow, newCol))
-        return []  # No path found
+        return []
+
     
 class MazePlayer:
     def __init__(self, row, col):
