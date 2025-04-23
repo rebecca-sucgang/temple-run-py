@@ -6,8 +6,8 @@ class Maze:
     def __init__(self, rows, cols, extra_exits=2):
         self.rows = rows
         self.cols = cols
-        self.grid = [[1 for _ in range(cols)] for _ in range(rows)]
-        self.visited = [[False for _ in range(cols)] for _ in range(rows)]
+        self.grid = [[1 for i in range(cols)] for i in range(rows)]
+        self.visited = [[False for j in range(cols)] for j in range(rows)]
         self.start = (1, 1)
         self.end = (rows - 2, cols - 2)
         self.exits = [self.end]
@@ -25,25 +25,25 @@ class Maze:
         random.shuffle(directions) # Randomize for a organic maze
 
         for dr, dc in directions:
-            new_row, new_col = row + dr, col + dc
-            # Legality: Stay inside the outer border of walls (index 0 and last index stay solid)
-            if 1 <= new_row < self.rows - 1 and 1 <= new_col < self.cols - 1:
-                if not self.visited[new_row][new_col]:
+            newRow, newCol = row + dr, col + dc
+            # Legality: Stay inside the outer border of walls
+            if 1 <= newRow < self.rows - 1 and 1 <= newCol < self.cols - 1:
+                if not self.visited[newRow][newCol]:
                     self.grid[row + dr // 2][col + dc // 2] = 0
-                    self.generateMaze(new_row, new_col)
+                    self.generateMaze(newRow, newCol)
 
     def addExtraExits(self, count):
-        # Collect every wall cell on the border that sits next to an interior path (0)
+        # Collect every wall cell on the border next to 0
         edges = []
         for r in range(1, self.rows - 1):
-            if self.grid[r][1] == 0: # possible left border candidate 
+            if self.grid[r][1] == 0: 
                 edges.append((r, 0))
-            if self.grid[r][self.cols - 2] == 0: # possible right border condidate
+            if self.grid[r][self.cols - 2] == 0: 
                 edges.append((r, self.cols - 1))
         for c in range(1, self.cols - 1):
-            if self.grid[1][c] == 0: # possible top border candidate
+            if self.grid[1][c] == 0: 
                 edges.append((0, c))
-            if self.grid[self.rows - 2][c] == 0: # possible bottom border candidate
+            if self.grid[self.rows - 2][c] == 0: 
                 edges.append((self.rows - 1, c))
 
         random.shuffle(edges) # to randomize the exits we open up
@@ -65,8 +65,8 @@ class MazeSolver:
         self.exits = maze.exits
 
     def findShortestPath(self, start):
-        visited = [[False] * self.cols for _ in range(self.rows)]
-        parent = [[None] * self.cols for _ in range(self.rows)]
+        visited = [[False] * self.cols for i in range(self.rows)]
+        parent = [[None] * self.cols for j in range(self.rows)]
 
         # Breadth‑first search (BFS) queue
         path = [start]
@@ -84,12 +84,13 @@ class MazeSolver:
                 return path
 
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-                new_row, new_col = row + drow, col + dcol
-                if (0 <= new_row < self.rows and 0 <= new_col < self.cols and
-                    self.grid[new_row][new_col] == 0 and not visited[new_row][new_col]):
-                    visited[new_row][new_col] = True
-                    parent[new_row][new_col] = (row, col)
-                    path.append((new_row, new_col))
+                newRow, newCol = row + drow, col + dcol
+                if (0 <= newRow < self.rows and 0 <= newCol < self.cols and
+                    self.grid[newRow][newCol] == 0 and 
+                    not visited[newRow][newCol]):
+                    visited[newRow][newCol] = True
+                    parent[newRow][newCol] = (row, col)
+                    path.append((newRow, newCol))
         return []  # No path found
     
 class MazePlayer:
@@ -108,7 +109,10 @@ class MazePlayer:
         self.y = app.boardTop + self.row * h + h / 2
 
     def canMove(self, direction, maze):
-        possibleDirections = {'up': (-1, 0), 'down': (1, 0), 'left': (0, -1), 'right': (0, 1)}
+        possibleDirections = {'up': (-1, 0), 
+                              'down': (1, 0), 
+                              'left': (0, -1), 
+                              'right': (0, 1)}
         drow, dcol = possibleDirections[direction]
         newRow = self.row + drow
         newCol = self.col + dcol

@@ -4,6 +4,7 @@ from PIL import Image as PILImage
 from ui_assets import UIGame
 import json
 
+
 # added leaderboard code by pranav
 def loadScoresFromFile():
     try:
