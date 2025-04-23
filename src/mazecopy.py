@@ -64,7 +64,7 @@ class MazeSolver:
         self.grid = maze.grid
         self.exits = maze.exits
 
-    def findShortestPath(self, start):
+    def shortestPath(self, start):
         visited = [[False] * self.cols for i in range(self.rows)]
         parent = [[None] * self.cols for j in range(self.rows)]
 
@@ -152,7 +152,7 @@ class MazePlayer:
             self.row = targetRow
             self.col = targetCol
             self.updatePixelPosition(app)
-            app.shortestPath = app.shortestPathSolver.findShortestPath((self.row, self.col))
+            app.shortestPath = app.shortestPathSolver.shortestPath((self.row, self.col))
         else:
             self.x += dx
             self.y += dy
@@ -172,17 +172,21 @@ def onAppStart(app):
     app.shortestPathSolver = MazeSolver(app.maze)
 
     app.showPath = False
-    app.shortestPath = app.shortestPathSolver.findShortestPath((app.player.row, app.player.col))
+    app.shortestPath = app.shortestPathSolver.shortestPath((app.player.row, app.player.col))
 
     # made quit button with chatGPT
-    app.quitButton = {'x': app.width - 150, 'y': app.height - 400, 'width': 100, 'height': 40}
+    app.quitButton = {'x': app.width - 150, 
+                      'y': app.height - 400, ''
+                      'width': 100, 
+                      'height': 40}
 
 # Draw the quit button
 def drawQuitButton(app):
-    drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], 
-             fill='red', border='black', borderWidth=2)
+    drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], 
+             app.quitButton['height'], fill='red', border='black', borderWidth=2)
     drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, 
-              app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='white')
+              app.quitButton['y'] + app.quitButton['height'] / 2, 
+              font='Arial 16 bold', fill='white')
 
 # Check if the mouse click is within the quit button area
 def onMousePress(app, mouseX, mouseY):
