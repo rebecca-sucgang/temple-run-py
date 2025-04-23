@@ -102,7 +102,6 @@ class MazePlayer:
         self.speed = 2
         self.moveDirection = None
         self.facing = 'up'
-        self.mazesSolved = 0
 
     def updatePixelPosition(self, app):
         w, h = getCellSize(app)
@@ -143,9 +142,7 @@ class MazePlayer:
             return
         
         if (targetRow, targetCol) in app.maze.exits:
-            app.mazesSolved += 1
             onAppStart(app)
-            return
 
         tx = app.boardLeft + targetCol * w + w / 2
         ty = app.boardTop + targetRow * h + h / 2
@@ -168,8 +165,6 @@ def onAppStart(app):
     app.boardWidth = 400
     app.boardHeight = 400
     app.cellBorderWidth = 1
-    # From ChatGPT after debugging app.mazesSolved problem
-    app.mazesSolved = getattr(app, 'mazesSolved', 0)
 
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
@@ -182,7 +177,7 @@ def onAppStart(app):
 
     # made quit button with chatGPT
     app.quitButton = {'x': app.width - 150, 
-                      'y': app.height - 400,
+                      'y': app.height - 400, ''
                       'width': 100, 
                       'height': 40}
 
@@ -208,7 +203,6 @@ def redrawAll(app):
     if app.showPath:
         drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
     drawQuitButton(app)
-    drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, fill = "black", size = 15, bold = True)
 
 # Full maze at bottom-right (250x250)
 def drawMaze(app):
