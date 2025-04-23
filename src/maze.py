@@ -165,13 +165,10 @@ def onAppStart(app):
     app.boardWidth = 400
     app.boardHeight = 400
     app.cellBorderWidth = 1
-<<<<<<< HEAD
 
     # Citation: ChatGPT after debugging app.mazesSolved problem
     app.mazesSolved = getattr(app, 'mazesSolved', 0)
 
-=======
->>>>>>> parent of 2f365b7 (maze.py update)
     app.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
     app.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
     app.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))
@@ -213,11 +210,8 @@ def redrawAll(app):
     if app.showPath:
         drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
     drawQuitButton(app)
-<<<<<<< HEAD
     drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, 
               fill = "black", size = 15, bold = True)
-=======
->>>>>>> parent of 2f365b7 (maze.py update)
 
 # Full maze at bottom-right (250x250)
 def drawMaze(app):
