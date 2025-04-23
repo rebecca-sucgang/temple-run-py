@@ -1,6 +1,6 @@
 from cmu_graphics import *
+from PIL import Image as PILImage
 import random
-
 
 class Maze:
     def __init__(self, rows, cols, extra_exits=2):
@@ -161,6 +161,9 @@ def onAppStart(app):
     app.boardWidth = 400
     app.boardHeight = 400
     app.cellBorderWidth = 1
+    app.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
+    app.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
+    app.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))
 
     app.maze = Maze(app.rows, app.cols, extra_exits=3)
     app.player = MazePlayer(*app.maze.start)
@@ -176,9 +179,9 @@ def onAppStart(app):
 # Draw the quit button
 def drawQuitButton(app):
     drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], 
-             fill='red', border='black', borderWidth=2)
+             fill='red', border='sienna', borderWidth=2)
     drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, 
-              app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='white')
+              app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='beige')
 
 # Check if the mouse click is within the quit button area
 def onMousePress(app, mouseX, mouseY):
@@ -206,13 +209,14 @@ def drawMaze(app):
             x = xOffset + col * cellW
             y = yOffset + row * cellH
             # Determine color based on the cell type (start, exit, wall, or free space)
-            if (row, col) == app.maze.start:
-                color = 'lightgreen'
-            elif (row, col) in app.maze.exits:
-                color = 'gold'
+            if (row, col) in app.maze.exits:
+                drawImage(app.mazeEndImage, x, y, width=cellW, height=cellH)
             else:
-                color = 'black' if app.maze.grid[row][col] == 1 else 'white'
-            drawRect(x, y, cellW, cellH, fill=color, border='gray', borderWidth=1)
+                if app.maze.grid[row][col] == 1:
+                    drawImage(app.mazeBorderImage, x, y, width=cellW, height=cellH)
+                else:
+                    drawImage(app.mazePathImage, x, y, width=cellW, height=cellH)
+
 
     # Player in mini maze
     pr, pc = int(app.player.row), int(app.player.col)
@@ -257,13 +261,13 @@ def drawMazeZoomed(app):
                 continue
             x = xOffset + j * zoomW
             y = yOffset + i * zoomH
-            if (row, col) == app.maze.start:
-                color = 'lightgreen'
-            elif (row, col) in app.maze.exits:
-                color = 'gold'
+            if (row, col) in app.maze.exits:
+                drawImage(app.mazeEndImage, x, y, width=zoomW, height=zoomH)
             else:
-                color = 'black' if app.maze.grid[row][col] == 1 else 'white'
-            drawRect(x, y, zoomW, zoomH, fill=color, border='gray', borderWidth=app.cellBorderWidth)
+                if app.maze.grid[row][col] == 1:
+                    drawImage(app.mazeBorderImage, x, y, width=zoomW, height=zoomH)
+                else:
+                    drawImage(app.mazePathImage, x, y, width=zoomW, height=zoomH)
 
             # Draw red path dot if applicable
             if app.showPath and (row, col) in app.shortestPath:
@@ -290,7 +294,7 @@ def drawShortestPath(app):
 def onKeyPress(app, key):
     if key == 'r':
         onAppStart(app)
-    elif key == 'p':
+    elif key == '?':
         app.showPath = not app.showPath
 
 def onKeyHold(app, keys):

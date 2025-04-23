@@ -1,7 +1,7 @@
 from cmu_graphics import *
 import random
 from PIL import Image as PILImage
-from ui_assets import UIGame
+from ui_assets import UIBackground, UIButton
 import json
 
 # added leaderboard code by pranav
@@ -19,23 +19,60 @@ class Player:
         self.x = x
         self.y = y
 
-        # adding runner sprite -- i asked chatgpt for help 
+        # i asked chatgpt for help 
         # on how to create my own sprite and integrating into code
+
+        # Runner sprite, with help of ChatGPT
+        self.runnerFrameWidth = 186 # actual size
+        self.runnerFrameHeight = 396 # actual size
+        self.runnerDisplayWidth = 50 # size on screen
+        self.runnerDisplayHeight = 100 #  size on screen
         self.frameIndex = 0
         self.frameCount = 6
         self.frameSize = 200
         self.tick = 0
 
-        self.frameWidth = 186
-        self.frameHeight = 396
-        self.displayWidth = 50
-        self.displayHeight = 100
+        # Jump sprite, with help of ChatGPT
+        self.jumpFrameWidth = 400 # actual size
+        self.jumpFrameHeight = 400 # actual size
+        self.jumpDisplayWidth = 100 # size on screen
+        self.jumpDisplayHeight = 100 # size on screen
+        
+        # Jump sprite, with help of ChatGPT
+        self.isJumping = False
+        self.jumpFrameIndex = 0
+        self.jumpFrameCount = 8
+        self.jumpHeight = 50
+        self.jumpProgress = 0
+        self.jumpUpDuration = 8
+        self.jumpDownDuration = 8
+        self.jumpTotalFrames = self.jumpUpDuration + self.jumpDownDuration
 
-        self.runningSpriteSheet = CMUImage(
-            PILImage.open('src/images/sprites/runnerspritesheet.png'))
+    def startJump(self): # with help of ChatGPT
+        if not self.isJumping:
+            self.isJumping = True
+            self.jumpFrameIndex = 0
+            self.jumpProgress = 0
+    
+    def updateJump(self): # with help of ChatGPT
+        if self.isJumping:
+            self.jumpFrameIndex = (self.jumpFrameIndex + 1) % self.jumpFrameCount
+            self.jumpProgress += 1
+
+            if self.jumpProgress <= self.jumpUpDuration:
+                self.y -= self.jumpHeight / self.jumpUpDuration
+            elif self.jumpProgress <= self.jumpTotalFrames:
+                self.y += self.jumpHeight / self.jumpDownDuration
+            else:
+                self.isJumping = False
+                self.jumpProgress = 0
 
     def move(self, direction, speed):
-        halfWidth = self.displayWidth // 2
+        if self.isJumping:
+            halfWidth = self.jumpDisplayWidth // 2
+        else:
+            halfWidth = self.runnerDisplayWidth // 2        
+        
         if direction == 'left' and self.x - halfWidth > 150:
             self.x -= speed
         elif direction == 'right' and self.x + halfWidth < 350:
@@ -46,27 +83,41 @@ class Player:
         if self.tick % 5 == 0:
             self.frameIndex = (self.frameIndex + 1) % self.frameCount
 
-    def draw(self):
-        left = self.frameIndex * self.frameWidth
-        top = 0
+    def draw(self): # guidance from ChatGPT
+        if self.isJumping: # jumping sprite
+            spriteSheet = PILImage.open('src/images/sprites/jumpspritesheet.png')
+            frameWidth = self.jumpFrameWidth
+            frameHeight = self.jumpFrameHeight
+            displayWidth = self.jumpDisplayWidth
+            displayHeight = self.jumpDisplayHeight
+            frameIndex = self.jumpFrameIndex
+            left = frameIndex * frameWidth
+        else: # runner sprite
+            if self.tick % 5 == 0:
+                self.frameIndex = (self.frameIndex + 1) % self.frameCount
+            spriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
+            frameWidth = self.runnerFrameWidth
+            frameHeight = self.runnerFrameHeight
+            displayWidth = self.runnerDisplayWidth
+            displayHeight = self.runnerDisplayHeight
+            frameIndex = self.frameIndex
+            left = frameIndex * frameWidth
 
-        rawSpriteSheet = PILImage.open(
-            'src/images/sprites/runnerspritesheet.png')
-        croppedFrame = rawSpriteSheet.crop((left, top, 
-                                            left + self.frameWidth, 
-                                            top + self.frameHeight))
-        resizedFrame = croppedFrame.resize((self.displayWidth, 
-                                            self.displayHeight))
-
-        frame = CMUImage(resizedFrame)
-        drawImage(frame, self.x - self.displayWidth//2, 
-                  self.y - self.displayHeight//2)
+        cropped = spriteSheet.crop((left, 0, left + frameWidth, frameHeight))
+        resized = cropped.resize((displayWidth, displayHeight))
+        drawImage(CMUImage(resized), self.x - displayWidth // 2, self.y - displayHeight // 2)
 
     def getBounds(self):
-        return (self.x - self.displayWidth // 2,
-                self.y - self.displayHeight // 2,
-                self.x + self.displayWidth // 2,
-                self.y + self.displayHeight // 2)
+        if self.isJumping: # check if jumping sprite
+            displayWidth = self.jumpDisplayWidth
+            displayHeight = self.jumpDisplayHeight
+        else: # check if running sprite
+            displayWidth = self.runnerDisplayWidth
+            displayHeight = self.runnerDisplayHeight
+        return (self.x - displayWidth // 2,
+                self.y - displayHeight // 2,
+                self.x + displayWidth // 2,
+                self.y + displayHeight // 2)
 
 class Coin:
     def __init__(self, x, y): 
@@ -108,7 +159,8 @@ class Game:
         self.app = app
         self.scoreList = []
         self.coins = []
-        self.UIGame = UIGame()
+        self.UIBackground = UIBackground()
+        self.UIButton = UIButton()
         
         self.music = Sound('sounds/templerunmusic.mp3')
         self.musicPaused = False
@@ -126,6 +178,7 @@ class Game:
         self.started = False
         self.selectingMode = False
         self.tutorial = False
+        self.mazeTutorial = False
         self.leaderboard = False
         self.over = False
         self.paused = False
@@ -163,7 +216,9 @@ class Game:
     def update(self):
         if not self.started or self.over or self.paused:
             return
+        
         self.player.updateAnimation()
+        self.player.updateJump()
         
         # gradually increase speed over time
         self.speed = 5 + self.score // 10
@@ -268,7 +323,7 @@ class Game:
         self.saveScoresToFile()
 
     def leaderShipBoard(self):
-        drawImage(self.UIGame.leaderboardBackground, 0, 0)
+        drawImage(self.UIBackground.leaderboardBackground, 0, 0)
         drawLabel(f"{self.recentScore}", 350, 123, 
                   fill='white', size=18, bold=True)
         drawLabel(f"{self.maxScore}", 330, 161, 
@@ -282,53 +337,57 @@ class Game:
     # end of pranav's leaderboard code
             
     def drawRoadBackground(self):
-        drawImage(self.UIGame.forestBackground, 0, 0)
+        drawImage(self.UIBackground.forestBackground, 0, 0)
         # Used ChatGPT to generate road background
-        #  - after Hack112, I will do it myself
         for y in range(-40, 500, 20):
             offset = 10 if (y // 20) % 2 == 0 else 0
             for x in range(150 + offset, 350, 20):
                 drawRect(x, y + self.roadOffset, 20, 20, 
                          fill='sienna', border='black', borderWidth=1)
                 
-        # if step reaches a certain amount, draw 
+        # if step reaches a certain amount, draw
                 
     def drawSoundIcon(self):
-        drawImage(self.UIGame.soundButton, 20, 430)
+        drawImage(self.UIButton.soundButton, 20, 430)
         if self.musicPaused:
             drawLine(20, 430, 70, 480, fill='red', lineWidth=4)
 
     def draw(self):
         if self.tutorial:
-            drawImage(self.UIGame.tutorialBackground, 0, 0)
-            drawImage(self.UIGame.backButton, 200, 375)
+            drawImage(self.UIBackground.tutorialNormal, 0, 0)
+            drawImage(self.UIButton.backButton, 110, 410)
+            self.drawSoundIcon()
+        
+        elif self.mazeTutorial:
+            drawImage(self.UIBackground.tutorialMaze, 0, 0)
+            drawImage(self.UIButton.backButton, 110, 410)
             self.drawSoundIcon()
         
         elif self.selectingMode:
-            drawImage(self.UIGame.startBackground, 0,0)
-            drawImage(self.UIGame.normalModeButton, 200, 285)
-            drawImage(self.UIGame.mazeModeButton, 200, 350)
-            drawImage(self.UIGame.backButton, 215, 415)
+            drawImage(self.UIBackground.startBackground, 0,0)
+            drawImage(self.UIButton.normalModeButton, 200, 285)
+            drawImage(self.UIButton.mazeModeButton, 200, 350)
+            drawImage(self.UIButton.backButton, 215, 415)
             self.drawSoundIcon()
 
         elif self.leaderboard: # pranav
             # added pranav's code here
             self.leaderShipBoard()
-            drawImage(self.UIGame.backButton, 200, 410)
+            drawImage(self.UIButton.backButton, 200, 410)
             self.drawSoundIcon()
 
         elif not self.started:
-            drawImage(self.UIGame.startBackground, 0,0)
-            drawImage(self.UIGame.startButton, 210, 290)
-            drawImage(self.UIGame.howToPlayButton, 210, 350)
-            drawImage(self.UIGame.leaderboardButton, 210, 410)
+            drawImage(self.UIBackground.startBackground, 0,0)
+            drawImage(self.UIButton.startButton, 210, 290)
+            drawImage(self.UIButton.howToPlayButton, 210, 350)
+            drawImage(self.UIButton.leaderboardButton, 210, 410)
             self.drawSoundIcon()
         
         elif self.over:
-            drawImage(self.UIGame.gameOverBackground, 0,0)
+            drawImage(self.UIBackground.gameOverBackground, 0,0)
             drawLabel(f'{self.score}', 250, 260, 
                       size=60, fill='white', bold=True)
-            drawImage(self.UIGame.startOverButton, 200, 350)
+            drawImage(self.UIButton.startOverButton, 200, 350)
             self.drawSoundIcon()
 
         elif self.paused:
@@ -342,7 +401,7 @@ class Game:
                       size=18, bold=True, fill="white")
             drawLabel('Paused', 250, 60, 
                       size=24, fill='orange', bold=True)
-            drawImage(self.UIGame.playButton, 410, 420)
+            drawImage(self.UIButton.playButton, 410, 420)
             self.drawSoundIcon()
         else:
             self.drawRoadBackground()
@@ -353,7 +412,7 @@ class Game:
                 self.hole.draw()
             drawLabel(f'Score: {self.score}', 250, 20, 
                       size=18, bold=True, fill="white")
-            drawImage(self.UIGame.pauseButton, 423, 433)
+            drawImage(self.UIButton.pauseButton, 423, 433)
             self.drawSoundIcon()
 
 def onAppStart(app):
@@ -361,6 +420,11 @@ def onAppStart(app):
 
 def onStep(app):
     app.game.update()
+
+def onKeyPress(app, key):
+    if app.game.started and not app.game.over and not app.game.paused:
+        if key == 'up':
+            app.game.player.startJump()
 
 def onKeyHold(app, keys):
     # cannot move player when paused
@@ -381,9 +445,11 @@ def onMousePress(app, x, y):
     elif app.game.tutorial:
         if 20 <= x <= 80 and 420 <= y <= 480:
             app.game.toggleMusic()
-        if 200 <= x <= 300 and 375 <= y <= 415:
+        if 110 <= x <= 210 and 410 <= y <= 450:
             # Return to main menu
             app.game.tutorial = False
+        if __ <= x <= __ and 410 <= y <= 460:
+            
 
     elif app.game.leaderboard: 
         if 20 <= x <= 80 and 420 <= y <= 480:

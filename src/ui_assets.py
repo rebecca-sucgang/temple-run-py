@@ -1,13 +1,15 @@
 from cmu_graphics import *
 from PIL import Image as PILImage
 
-class UIGame:
+class UIBackground:
     def __init__(self):
         # Backgrounds
         self.startBackground = CMUImage(
             PILImage.open('src/images/startcavelogo.png').resize((500, 500)))
-        self.tutorialBackground = CMUImage(
-            PILImage.open('src/images/tutorial.png').resize((500, 500)))
+        self.tutorialNormal = CMUImage(
+            PILImage.open('src/images/tutorialnormal.png').resize((500, 500)))
+        self.tutorialMaze = CMUImage(
+            PILImage.open('src/images/tutorialmaze.png').resize((500, 500)))
         self.forestBackground = CMUImage(
             PILImage.open('src/images/forestbackground.jpg').resize((500, 500)))
         self.gameOverBackground = CMUImage(
@@ -15,6 +17,8 @@ class UIGame:
         self.leaderboardBackground = CMUImage(
             PILImage.open('src/images/leaderboard.png').resize((500, 500)))
 
+class UIButton:
+    def __init__(self):
         # Buttons
         self.startButton = CMUImage(
             PILImage.open('src/images/buttons/start.png'))
