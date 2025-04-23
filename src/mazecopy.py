@@ -203,7 +203,7 @@ def getCellCenter(app, row, col):
     return x + w/2, y + h/2
 
 # overall citation for following code: ChatGPT helped me to just organize the code into
-#  a new MazeGame class in order to link this maze mode to game.py
+# a new MazeGame class in order to link this maze mode to game.py
 class MazeGame:
     def __init__(self, app):
         app.rows = 21
@@ -232,14 +232,14 @@ class MazeGame:
         app.shortPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
 
         # Citation: made quit button with chatGPT
-        app.quitButton = {'x': app.width - 150, 
-                          'y': app.height - 400, 
-                          'width': 100, 
-                          'height': 40}
-        app.solveButton = {'x': app.width - 150, 
-                    'y': app.height - 340,
-                    'width': 100,
-                    'height': 40}
+        app.quitButton = {'x': 308, 
+                          'y': 202, 
+                          'width': 60, 
+                          'height': 25}
+        app.solveButton = {'x': 382, 
+                    'y': 202,
+                    'width': 59,
+                    'height': 25}
         self.UIButton = UIButton()
         self.UIMazeBlock = UIMazeBlock()
 
@@ -296,22 +296,30 @@ class MazeGame:
     def redrawAll(self, app):
         self.drawMazeZoomed(app)
         self.drawMaze(app)
+        self.drawMazeInstructions()
         if app.showPath:
             self.drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
         self.drawQuitButton(app)
         self.drawSolveButton(app)
-        drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, fill="black", size=15, bold=True)
+        drawLabel(f"{app.mazesSolved}", 440, 183, fill="white", size=20, bold=True)
+
+    def drawMazeInstructions(self):
+        drawImage(self.UIMazeBlock.mazeInstructions, 250, 0)
 
     # Draw the quit button
     def drawQuitButton(self, app):
-        drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], fill='red', border='sienna', borderWidth=2)
-        drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='beige')
+        drawRect(app.quitButton['x'], app.quitButton['y'], 
+                 app.quitButton['width'], app.quitButton['height'], 
+                 fill='red')
+        drawLabel("QUIT", app.quitButton['x'] + app.quitButton['width'] / 2, 
+                  app.quitButton['y'] + app.quitButton['height'] / 2, 
+                  font='Arial 16 bold', fill='white')
 
     #solve maze code
     def drawSolveButton(self, app):
         drawRect(app.solveButton['x'], app.solveButton['y'], app.solveButton['width'], 
-                app.solveButton['height'], fill='green', border='black')
-        drawLabel("Solve", app.solveButton['x'] + app.solveButton['width'] / 2, 
+                app.solveButton['height'], fill='green')
+        drawLabel("SOLVE", app.solveButton['x'] + app.solveButton['width'] / 2, 
                 app.solveButton['y'] + app.solveButton['height'] / 2, 
                 font='Arial 16 bold', fill='white')
     #solve maze code

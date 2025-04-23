@@ -1,6 +1,8 @@
 from cmu_graphics import *
 from PIL import Image as PILImage
 
+# rebecca organized more of the UI images into this separate file
+# to clean up the code
 class UIBackground:
     def __init__(self):
         # Backgrounds
@@ -42,9 +44,18 @@ class UIButton:
             PILImage.open('src/images/buttons/leaderboard.png'))
         self.startOverButton = CMUImage(
             PILImage.open('src/images/buttons/startover.png'))
+        self.leftArrowButton = CMUImage(
+            PILImage.open('src/images/buttons/leftarrow.png').resize((40, 40)))
+        self.rightArrowButton = CMUImage(
+            PILImage.open('src/images/buttons/rightarrow.png'))
         
 class UIMazeBlock:
     def __init__(self):
-        self.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
-        self.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
-        self.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))
+        self.mazePathImage = CMUImage(
+            PILImage.open('src/images/maze/floorblock.jpg'))
+        self.mazeBorderImage = CMUImage(
+            PILImage.open('src/images/maze/borderblock.png'))
+        self.mazeEndImage = CMUImage(
+            PILImage.open('src/images/maze/endblock.png'))
+        self.mazeInstructions = CMUImage(
+            PILImage.open('src/images/maze/mazetopright.png'))
