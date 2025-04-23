@@ -398,8 +398,7 @@ class Game:
             self.hole.draw()
         drawLabel(f'Score: {self.score}', 250, 20, 
                     size=18, bold=True, fill="white")
-        drawLabel('Paused', 250, 60, 
-                    size=24, fill='orange', bold=True)
+        drawImage(self.UIBackground.pausedLogo, 127, 200)
         drawImage(self.UIButton.playButton, 410, 420)
         self.drawSoundIcon()
 

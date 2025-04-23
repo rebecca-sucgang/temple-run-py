@@ -222,16 +222,43 @@ class MazeGame:
         app.player.updatePixelPosition(app)
         app.pathSolv = MazeSolver(app.maze)
 
+        app.autoSolve = False
+        app.shortestPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
+        app.autoPathIndex = 0
+        app.autoSolveDelay = 5
+        app.autoSolveCounter = 0
+
         app.showPath = False
         app.shortPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
 
         # Citation: made quit button with chatGPT
-        app.quitButton = {'x': app.width - 150, 'y': app.height - 400, 'width': 100, 'height': 40}
+        app.quitButton = {'x': app.width - 150, 
+                          'y': app.height - 400, 
+                          'width': 100, 
+                          'height': 40}
+        app.solveButton = {'x': app.width - 150, 
+                    'y': app.height - 340,
+                    'width': 100,
+                    'height': 40}
         self.UIButton = UIButton()
         self.UIMazeBlock = UIMazeBlock()
 
     def onStep(self, app):
         app.player.moveStep(app)
+        # solve maze code
+        if app.autoSolve and app.shortestPath:
+            app.autoSolveCounter += 1
+            if app.autoSolveCounter >= app.autoSolveDelay:
+                app.autoSolveCounter = 0
+                if app.autoPathIndex < len(app.shortestPath):
+                    nextRow, nextCol = app.shortestPath[app.autoPathIndex]
+                    app.player.row = nextRow
+                    app.player.col = nextCol
+                    app.player.updatePixelPosition(app)
+                    app.autoPathIndex += 1
+                else:
+                    app.autoSolve = False
+        #solve maze code
 
     def onKeyPress(self, app, key):
         if key == 'r':
@@ -258,6 +285,13 @@ class MazeGame:
         by = app.quitButton['y'] + app.quitButton['height']
         if (app.quitButton['x'] <= x <= bx and app.quitButton['y'] <= y <= by):
             app.gameMode = 'main'
+        # Solve button
+        solveX2 = app.solveButton['x'] + app.solveButton['width']
+        solveY2 = app.solveButton['y'] + app.solveButton['height']
+        if (app.solveButton['x'] <= x <= solveX2 and
+            app.solveButton['y'] <= y <= solveY2):
+            app.autoSolve = True
+            app.autoPathIndex = 0
 
     def redrawAll(self, app):
         self.drawMazeZoomed(app)
@@ -265,12 +299,22 @@ class MazeGame:
         if app.showPath:
             self.drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
         self.drawQuitButton(app)
+        self.drawSolveButton(app)
         drawLabel(f"Amount of Mazes Solved: {app.mazesSolved}", 375, 50, fill="black", size=15, bold=True)
 
     # Draw the quit button
     def drawQuitButton(self, app):
         drawRect(app.quitButton['x'], app.quitButton['y'], app.quitButton['width'], app.quitButton['height'], fill='red', border='sienna', borderWidth=2)
         drawLabel("Quit", app.quitButton['x'] + app.quitButton['width'] / 2, app.quitButton['y'] + app.quitButton['height'] / 2, font='Arial 16 bold', fill='beige')
+
+    #solve maze code
+    def drawSolveButton(self, app):
+        drawRect(app.solveButton['x'], app.solveButton['y'], app.solveButton['width'], 
+                app.solveButton['height'], fill='green', border='black')
+        drawLabel("Solve", app.solveButton['x'] + app.solveButton['width'] / 2, 
+                app.solveButton['y'] + app.solveButton['height'] / 2, 
+                font='Arial 16 bold', fill='white')
+    #solve maze code
 
     # Full maze at bottom-right (250x250)
     def drawMaze(self, app):

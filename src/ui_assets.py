@@ -16,6 +16,8 @@ class UIBackground:
             PILImage.open('src/images/gameover.png').resize((500, 500)))
         self.leaderboardBackground = CMUImage(
             PILImage.open('src/images/leaderboard.png').resize((500, 500)))
+        self.pausedLogo = CMUImage(
+            PILImage.open('src/images/pausedlogo.png').resize((250, 100)))
 
 class UIButton:
     def __init__(self):
