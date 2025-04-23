@@ -40,3 +40,9 @@ class UIButton:
             PILImage.open('src/images/buttons/leaderboard.png'))
         self.startOverButton = CMUImage(
             PILImage.open('src/images/buttons/startover.png'))
+        
+class UIMazeBlock:
+    def __init__(self):
+        self.mazePathImage = CMUImage(PILImage.open('src/images/maze/floorblock.jpg'))
+        self.mazeBorderImage = CMUImage(PILImage.open('src/images/maze/borderblock.png'))
+        self.mazeEndImage = CMUImage(PILImage.open('src/images/maze/endblock.png'))

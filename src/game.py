@@ -2,6 +2,7 @@ from cmu_graphics import *
 import random
 from PIL import Image as PILImage
 from ui_assets import UIBackground, UIButton
+from mazecopy import MazeGame
 import json
 
 # added leaderboard code by pranav
@@ -83,7 +84,7 @@ class Player:
         if self.tick % 5 == 0:
             self.frameIndex = (self.frameIndex + 1) % self.frameCount
 
-    def draw(self): # guidance from ChatGPT
+    def draw(self): # the following code was guidance from ChatGPT
         if self.isJumping: # jumping sprite
             spriteSheet = PILImage.open('src/images/sprites/jumpspritesheet.png')
             frameWidth = self.jumpFrameWidth
@@ -93,8 +94,6 @@ class Player:
             frameIndex = self.jumpFrameIndex
             left = frameIndex * frameWidth
         else: # runner sprite
-            if self.tick % 5 == 0:
-                self.frameIndex = (self.frameIndex + 1) % self.frameCount
             spriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
             frameWidth = self.runnerFrameWidth
             frameHeight = self.runnerFrameHeight
@@ -442,74 +441,98 @@ class Game:
             self.drawActualGame()
 
 def onAppStart(app):
-    app.game = Game(app)
+    app.gameMode = 'main' # asked ChatGPT how to link the mazemode
+    app.mainGame = Game(app) # I needed to switch the app variable names to mainGame
+    app.mazeGame = MazeGame(app)
 
 def onStep(app):
-    app.game.update()
+    if app.gameMode == 'main':
+        app.mainGame.update()
+    elif app.gameMode == 'maze':
+        app.mazeGame.onStep(app) # handles all on step in maze mode
 
 def onKeyPress(app, key):
-    if app.game.started and not app.game.over and not app.game.paused:
-        if key == 'up':
-            app.game.player.startJump()
+    if app.gameMode == 'main':
+        if app.mainGame.started and not app.mainGame.over and not app.mainGame.paused:
+            if key == 'up':
+                app.mainGame.player.startJump()
+    elif app.gameMode == 'maze': # handles all key presses in maze mode
+        app.mazeGame.onKeyPress(app, key)
 
 def onKeyHold(app, keys):
-    # cannot move player when paused
-    if app.game.started and not app.game.over and not app.game.paused:
-        if 'left' in keys:
-            app.game.movePlayer('left')
-        if 'right' in keys:
-            app.game.movePlayer('right')
+    if app.gameMode == 'main':
+        # cannot move player when paused
+        if app.mainGame.started and not app.mainGame.over and not app.mainGame.paused:
+            if 'left' in keys:
+                app.mainGame.movePlayer('left')
+            if 'right' in keys:
+                app.mainGame.movePlayer('right')
+    if app.gameMode == 'maze': # handles all key holds in maze mode
+        app.mazeGame.onKeyHold(app, keys)
+
+def onKeyRelease(app, key):
+    if app.gameMode == 'maze':
+        app.mazeGame.onKeyRelease(app, key)
 
 def onMousePress(app, x, y):
-    if app.game.started and not app.game.over:
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-        if 410 <= x <= 470 and 420 <= y <= 470:
-            app.game.togglePause()
-            return
+    if app.gameMode == 'main':
+        if app.mainGame.started and not app.mainGame.over:
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            if 410 <= x <= 470 and 420 <= y <= 470:
+                app.mainGame.togglePause()
+                return
 
-    elif app.game.tutorial:
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-        if 110 <= x <= 210 and 410 <= y <= 450:
-            # Return to main menu
-            app.game.tutorial = False
-        if __ <= x <= __ and 410 <= y <= 460:
-            pass
+        elif app.mainGame.tutorial:
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            if 110 <= x <= 210 and 410 <= y <= 450:
+                # Return to main menu
+                app.mainGame.tutorial = False
+            # if __ <= x <= __ and 410 <= y <= 460:
+            #     pass
 
-    elif app.game.leaderboard: 
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-        if 200 <= x <= 300 and 390 <= y <= 430:
-            app.game.leaderboard = False
-    
-    elif app.game.over:
-        if 200 <= x <= 300 and 350 <= y <= 390:
-            app.game.reset()
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-    
-    elif app.game.selectingMode:
-        if 200 <= x <= 330 and 285 <= y <= 335:
-            app.game.selectingMode = False
-            app.game.start()  # start actual game
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-        if 210 <= x <= 310 and 415 <= y <= 465:
-            app.game.reset()
+        elif app.mainGame.leaderboard: 
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            if 200 <= x <= 300 and 390 <= y <= 430:
+                app.mainGame.leaderboard = False
+        
+        elif app.mainGame.over:
+            if 200 <= x <= 300 and 350 <= y <= 390:
+                app.mainGame.reset()
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+        
+        elif app.mainGame.selectingMode:
+            if 200 <= x <= 330 and 285 <= y <= 345:
+                app.mainGame.selectingMode = False
+                app.mainGame.start()  # start normal game
+            if 200 <= x <= 330 and 350 <= y <= 390:
+                # asked ChatGPT how to link files together when maze game mode is selected
+                app.gameMode = 'maze'
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            if 210 <= x <= 310 and 415 <= y <= 465:
+                app.mainGame.reset()
 
-    elif not app.game.started:
-        if 210 <= x <= 310 and 290 <= y <= 330:
-            app.game.selectingMode = True
-        if 20 <= x <= 80 and 420 <= y <= 480:
-            app.game.toggleMusic()
-        elif 210 <= x <= 310 and 350 <= y <= 390:
-            app.game.instructions()
-        elif 210 <= x <= 310 and 410 <= y <= 450:
-            app.game.leadership()
+        elif not app.mainGame.started:
+            if 210 <= x <= 310 and 290 <= y <= 330:
+                app.mainGame.selectingMode = True
+            if 20 <= x <= 80 and 420 <= y <= 480:
+                app.mainGame.toggleMusic()
+            elif 210 <= x <= 310 and 350 <= y <= 390:
+                app.mainGame.instructions()
+            elif 210 <= x <= 310 and 410 <= y <= 450:
+                app.mainGame.leadership()
+    elif app.gameMode == 'maze':  # handles all mouse presses in maze mode
+        app.mazeGame.onMousePress(app, x, y)
 
 def redrawAll(app):
-    app.game.draw()
+    if app.gameMode == 'main':
+        app.mainGame.draw()
+    elif app.gameMode == 'maze': # handles all drawing in maze mode
+        app.mazeGame.redrawAll(app)
 
 def main():
     runApp(width=500, height=500)
