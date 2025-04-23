@@ -1,6 +1,7 @@
-# this has the magnets too!
 from cmu_graphics import *
 import random
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image as PILImage
 from ui_assets import UIBackground, UIButton
 from mazecopy import MazeGame
@@ -90,6 +91,8 @@ class Player:
     def draw(self): # the following code was guidance from ChatGPT
         if self.isJumping: # jumping sprite
             spriteSheet = PILImage.open('src/images/sprites/jumpspritesheet.png')
+            # Video I used to screenshot and create the player sprite sheet:
+            # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.jumpFrameWidth
             frameHeight = self.jumpFrameHeight
             displayWidth = self.jumpDisplayWidth
@@ -98,6 +101,8 @@ class Player:
             left = frameIndex * frameWidth
         else: # runner sprite
             spriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
+            # Video I used to screenshot and create the player sprite sheet:
+            # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.runnerFrameWidth
             frameHeight = self.runnerFrameHeight
             displayWidth = self.runnerDisplayWidth
@@ -211,7 +216,6 @@ class Game:
         self.magnetTimer = 0 # note this is only for spawning the magnet (inspired by chatGPT)
         self.magnetActive = False # ChatGPT suggested this line 
         self.magnetEffectTimer = 300 # note this marks the time the magnetic pulling coins effect lasts (AI helped)
-
 
     def start(self):
         self.reset()
@@ -410,6 +414,13 @@ class Game:
             runScore = self.pastScores[runNumber]
             drawLabel(f'{runScore}', 300, 297+37*i, 
                       fill='white', size=18, bold=True)
+        x = [1, 2, 3]
+        plt.bar(x, self.pastScores[runNumber])
+        plt.title('Past Run Scores')
+        plt.xlabel('Run Number')
+        plt.ylabel('Score')
+        plt.show()
+            
 
     # end of pranav's leaderboard code
             
@@ -433,6 +444,7 @@ class Game:
     def drawTutorial(self):
         drawImage(self.UIBackground.tutorialNormal, 0, 0)
         drawImage(self.UIButton.backButton, 110, 410)
+        drawImage(self.UIButton.leftArrowButton, 300, 410)
         self.drawSoundIcon()
 
     def drawMazeTutorial(self):
@@ -474,11 +486,11 @@ class Game:
             coin.draw()
         if self.hole:
             self.hole.draw()
-        drawLabel(f'Score: {self.score}', 250, 20, 
+        drawLabel(f'Score: {self.score}', 425, 20, 
                     size=18, bold=True, fill="white")
-        drawLabel('Paused', 250, 60, 
-                    size=24, fill='orange', bold=True)
-        drawImage(self.UIButton.playButton, 410, 420)
+        drawImage(self.UIBackground.pausedLogo, 127, 200)
+        drawImage(self.UIButton.playButton, 77, 420)
+        drawImage(self.UIButton.backButton, 380, 433)
         self.drawSoundIcon()
 
     def drawActualGame(self):
@@ -494,8 +506,9 @@ class Game:
             drawLabel(f'Magnet Effect Timer:', 80, 20, size = 16, bold=True, fill = 'white')
             drawLabel(f'{self.magnetEffectTimer//30} s', 80, 40, size = 16, bold=True, fill = 'white')
         drawLabel(f'Score: {self.score}', 425, 20, 
-                    size=16, bold=True, fill="white")
-        drawImage(self.UIButton.pauseButton, 423, 433)
+                    size=18, bold=True, fill="white")
+        drawImage(self.UIButton.pauseButton, 90, 433)
+        drawImage(self.UIButton.backButton, 380, 433)
         self.drawSoundIcon()
 
     def draw(self):
@@ -562,9 +575,10 @@ def onMousePress(app, x, y):
         if app.mainGame.started and not app.mainGame.over:
             if 20 <= x <= 80 and 420 <= y <= 480:
                 app.mainGame.toggleMusic()
-            if 410 <= x <= 470 and 420 <= y <= 470:
+            if 90 <= x <= 150 and 433 <= y <= 483:
                 app.mainGame.togglePause()
-                return
+            if 380 <= x <= 480 and 433 <= y <= 483:
+                app.mainGame.reset()
 
         elif app.mainGame.tutorial:
             if 20 <= x <= 80 and 420 <= y <= 480:

@@ -5,8 +5,10 @@ from ui_assets import UIBackground, UIButton
 from mazecopy import MazeGame
 import json
 
-# added leaderboard code by pranav
-def loadScoresFromFile():
+# added leaderboard code by pranav (asked ChatGPT for help in saving scores in leaderboard)
+
+# this function was written with help of ChatGPT
+def loadScoresFromFile(): 
     try:
         with open("my_scores.json", "r") as f:
             return json.load(f)
@@ -87,6 +89,8 @@ class Player:
     def draw(self): # the following code was guidance from ChatGPT
         if self.isJumping: # jumping sprite
             spriteSheet = PILImage.open('src/images/sprites/jumpspritesheet.png')
+            # Video I used to screenshot and create the player sprite sheet:
+            # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.jumpFrameWidth
             frameHeight = self.jumpFrameHeight
             displayWidth = self.jumpDisplayWidth
@@ -95,6 +99,8 @@ class Player:
             left = frameIndex * frameWidth
         else: # runner sprite
             spriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
+            # Video I used to screenshot and create the player sprite sheet:
+            # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.runnerFrameWidth
             frameHeight = self.runnerFrameHeight
             displayWidth = self.runnerDisplayWidth
@@ -152,12 +158,29 @@ class Hole:
 
     def getBounds(self):
         return (self.x, self.y, self.x + self.w, self.y + self.h)
+    
+class Magnet: # pranav
+    def __init__(self, x, y): 
+        self.x = x
+        self.y = y
+        self.size = 30
+        self.magentImages = CMUImage(PILImage.open('src/images/gamemagnet2.png').resize((self.size, self.size)))
+        
+    def move(self, speed):
+        self.y += speed
+
+    def draw(self):
+        drawImage(self.magentImages, self.x, self.y)
+
+    def getBounds(self):
+        return (self.x - self.size, self.y - self.size, self.x + self.size, self.y + self.size)
 
 class Game:
     def __init__(self, app):
         self.app = app
         self.scoreList = []
         self.coins = []
+        self.magnets = [] #ChatGPT helped with this
         self.UIBackground = UIBackground()
         self.UIButton = UIButton()
         
@@ -165,7 +188,7 @@ class Game:
         self.musicPaused = False
         self.music.play(loop=True)
 
-        # code from pranav's leaderboard code
+        # code from pranav's leaderboard code (with help from ChatGPT)
         scores = loadScoresFromFile()
         self.recentScore = scores["recentScore"]
         self.maxScore = scores["maxScore"]
@@ -188,6 +211,9 @@ class Game:
         self.coinTimer = 0
         self.roadOffset = 0 # vertical scroll for road
         self.roadSpeed = 2
+        self.magnetTimer = 0 # note this is only for spawning the magnet (inspired by chatGPT)
+        self.magnetActive = False # ChatGPT suggested this line 
+        self.magnetEffectTimer = 300 # note this marks the time the magnetic pulling coins effect lasts (AI helped)
 
     def start(self):
         self.reset()
@@ -205,6 +231,13 @@ class Game:
         if self.started and not self.over:
             self.paused = not self.paused
 
+    def distance(self, x1, y1, x2, y2): # pranav wrote this function 
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        return ((self.x2-self.x1)**2 + (self.y2-self.y1)**2)**0.5
+
     def toggleMusic(self):
         if self.musicPaused:
             self.music.play(loop=True)
@@ -213,6 +246,22 @@ class Game:
         self.musicPaused = not self.musicPaused
 
     def update(self):
+
+        if self.magnetActive == True: # ChatGPT provided guidance regarding this if statement and the lines within it
+            self.magnetEffectTimer -= 1
+            for coin in self.coins:
+                dx = self.player.x - coin.x
+                dy = self.player.y - coin.y
+                dist = distance(self.player.x, coin.x, self.player.y, coin.y) # I wrote this distance function earlier 
+                if dy <= 20: # if vertical distance between player and coin is less than or equal to 20
+                    attractionSpeed = 6
+                    coin.x += dist*attractionSpeed
+                    coin.y += dist*attractionSpeed
+                    self.score += 1
+
+            if self.magnetEffectTimer <= 0: # ChatGPT provided guidance for this if statement too!
+                self.magnetActive = False
+
         if not self.started or self.over or self.paused:
             return
         
@@ -220,7 +269,7 @@ class Game:
         self.player.updateJump()
         
         # gradually increase speed over time
-        self.speed = 5 + self.score // 10
+        self.speed = 5 + self.score // 15
         self.roadOffset += self.roadSpeed
         if self.roadOffset >= 20:
             self.roadOffset -= 20
@@ -242,13 +291,16 @@ class Game:
         if self.hole:
             self.hole.move(self.speed)
 
+        for magnet in self.magnets: # ChatGPT helped with this for loop 
+            magnet.move(self.speed)
+
         playerBounds = self.player.getBounds()
 
         # Check if player got coins
         updatedCoins = []
         for coin in self.coins:
             if self.checkCollision(playerBounds, coin.getBounds()):
-                self.incrementScore(coin)
+                self.incrementScore()
             else:
                 updatedCoins.append(coin)
 
@@ -260,18 +312,46 @@ class Game:
         # Adds coin to validCoins list
         self.coins = validCoins
 
+        # Generate a magnet on the road (pranav)
+        if self.magnetTimer <= 0: 
+            if(self.score >= 30) and (self.score % 30 == 0): 
+                x = random.randint(150, 350)
+                y = random.randint(0, 400)
+                self.magnets.append(Magnet(x, y))
+                self.magnetTimer = 40
+        else:
+            self.magnetTimer -= 1
+
+        # Check if player got a magnet (pranav)
+        updatedMagnets = [] 
+        for magnet in self.magnets:
+            if self.checkCollision(playerBounds, magnet.getBounds()): # ChatGPT helped with this line
+                self.incrementScore()
+                self.magnetActive = True # ChatGPT helped with this line
+                self.magnetEffectTimer = 300 # ChatGPT helped with this line
+            else:
+                updatedMagnets.append(magnet)
+
+        # Remove magnets that have gone off the screen (pranav)
+        validMagnets = []
+        for magnet in updatedMagnets:
+            if magnet.y < 500: # 500 is screen width
+                validMagnets.append(magnet)
+        # Adds magnet to validMagnets list
+        self.magnets[:] = validMagnets
+
         # player falls in hole
         if self.hole:
             if self.checkCollision(playerBounds, self.hole.getBounds()):
                 self.over = True
                 self.scoreList.append(self.score)
-                self.recentScore = self.score  # just to be sure
-                self.endGame()  # this saves the score to the file
+                self.recentScore = self.score  # just to be sure (ChatGPT helped)
+                self.endGame()  # this saves the score to the file (ChatGPT helped)
 
             elif self.hole.y > 500:
                 self.hole = None
 
-    def incrementScore(self, coin):
+    def incrementScore(self):
         self.score += 1
         return False
 
@@ -284,19 +364,19 @@ class Game:
         bx1, by1, bx2, by2 = b
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
     
-    def returnMaxScore(self):  # pranav added this function
+    def returnMaxScore(self):  # pranav added this function (William Li, the TA guided)
         if self.scoreList == []:
             return None
         else:
             return max(self.scoreList)
         
-    def returnRecentScore(self): # pranav added this function
+    def returnRecentScore(self): # pranav added this function (William Li, the TA guided)
         if self.scoreList == []:
             return None
         else:
             return (self.scoreList)[-1]
         
-    # added updated leaderboard by pranav
+    # added updated leaderboard by pranav (this was written with help of ChatGPT)
     def saveScoresToFile(self):
         if not hasattr(self, 'pastScores'):
             self.pastScores = []
@@ -313,7 +393,7 @@ class Game:
         with open("my_scores.json", "w") as f:
             json.dump(scores, f, indent=4)
         
-    def endGame(self):
+    def endGame(self): # pranav (this was written with help of ChatGPT)
         self.recentScore = self.score
 
         if self.score > self.maxScore:
@@ -327,7 +407,7 @@ class Game:
                   fill='white', size=18, bold=True)
         drawLabel(f"{self.maxScore}", 330, 161, 
                   fill='white', size=18, bold=True)
-        for i in range(len(self.pastScores)):
+        for i in range(len(self.pastScores)): #pranav (with ChatGPT guidance)
             runNumber = i
             runScore = self.pastScores[runNumber]
             drawLabel(f'{runScore}', 300, 297+37*i, 
@@ -355,6 +435,7 @@ class Game:
     def drawTutorial(self):
         drawImage(self.UIBackground.tutorialNormal, 0, 0)
         drawImage(self.UIButton.backButton, 110, 410)
+        drawImage(self.UIButton.leftArrowButton, 300, 410)
         self.drawSoundIcon()
 
     def drawMazeTutorial(self):
@@ -396,10 +477,11 @@ class Game:
             coin.draw()
         if self.hole:
             self.hole.draw()
-        drawLabel(f'Score: {self.score}', 250, 20, 
+        drawLabel(f'Score: {self.score}', 425, 20, 
                     size=18, bold=True, fill="white")
         drawImage(self.UIBackground.pausedLogo, 127, 200)
-        drawImage(self.UIButton.playButton, 410, 420)
+        drawImage(self.UIButton.playButton, 77, 420)
+        drawImage(self.UIButton.backButton, 380, 433)
         self.drawSoundIcon()
 
     def drawActualGame(self):
@@ -409,9 +491,15 @@ class Game:
             coin.draw()
         if self.hole:
             self.hole.draw()
-        drawLabel(f'Score: {self.score}', 250, 20, 
+        for magnet in self.magnets: # ChatGPT helped with this for loop
+                magnet.draw()
+        if self.magnetActive: # ChatGPT guided with the drawLabel part since it suggested frames initially, so it helped convert frames to seconds 
+            drawLabel(f'Magnet Effect Timer:', 80, 20, size = 16, bold=True, fill = 'white')
+            drawLabel(f'{self.magnetEffectTimer//30} s', 80, 40, size = 16, bold=True, fill = 'white')
+        drawLabel(f'Score: {self.score}', 425, 20, 
                     size=18, bold=True, fill="white")
-        drawImage(self.UIButton.pauseButton, 423, 433)
+        drawImage(self.UIButton.pauseButton, 90, 433)
+        drawImage(self.UIButton.backButton, 380, 433)
         self.drawSoundIcon()
 
     def draw(self):
@@ -478,9 +566,10 @@ def onMousePress(app, x, y):
         if app.mainGame.started and not app.mainGame.over:
             if 20 <= x <= 80 and 420 <= y <= 480:
                 app.mainGame.toggleMusic()
-            if 410 <= x <= 470 and 420 <= y <= 470:
+            if 90 <= x <= 150 and 433 <= y <= 483:
                 app.mainGame.togglePause()
-                return
+            if 380 <= x <= 480 and 433 <= y <= 483:
+                app.mainGame.reset()
 
         elif app.mainGame.tutorial:
             if 20 <= x <= 80 and 420 <= y <= 480:
