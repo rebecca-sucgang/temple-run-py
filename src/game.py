@@ -22,8 +22,8 @@ class Player:
         self.x = x
         self.y = y
 
-        # i asked chatgpt for help 
-        # on how to create my own sprite and integrating into code
+        # rebecca asked chatgpt for help 
+        # on how to create sprites and integrating into code
 
         # Runner sprite, with help of ChatGPT
         self.runnerFrameWidth = 186 # actual size
@@ -79,8 +79,8 @@ class Player:
                 self.y = maxY
 
 
-    def move(self, direction, speed):
-        if self.isJumping:
+    def move(self, direction, speed): 
+        if self.isJumping: 
             halfWidth = self.jumpDisplayWidth // 2
         else:
             halfWidth = self.runnerDisplayWidth // 2        
@@ -99,7 +99,7 @@ class Player:
         if self.isJumping: # jumping sprite
             spriteSheet = (PILImage.open(
                 'src/images/sprites/jumpspritesheet.png'))
-            # Video I used to screenshot and create the player sprite sheet:
+            # Video Rebecca used to screenshot and create the player sprite sheet:
             # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.jumpFrameWidth
             frameHeight = self.jumpFrameHeight
@@ -110,7 +110,7 @@ class Player:
         else: # runner sprite
             spriteSheet = (PILImage.open(
                 'src/images/sprites/runnerspritesheet.png'))
-            # Video I used to screenshot and create the player sprite sheet:
+            # Video Rebecca used to screenshot and create the player sprite sheet:
             # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.runnerFrameWidth
             frameHeight = self.runnerFrameHeight
@@ -121,8 +121,8 @@ class Player:
 
         cropped = spriteSheet.crop((left, 0, left + frameWidth, frameHeight))
         resized = cropped.resize((displayWidth, displayHeight))
-        drawImage((CMUImage(resized), self.x - displayWidth // 2, 
-                   self.y - displayHeight // 2))
+        drawImage(CMUImage(resized), self.x - displayWidth // 2, 
+                   self.y - displayHeight // 2)
 
     def getBounds(self):
         if self.isJumping: # check if jumping sprite
@@ -266,7 +266,7 @@ class Game:
 
     def update(self):
         if self.magnetActive:
-            self.handle_magnet_effect()
+            self.handleMagnetEffect()
 
         if not self.started or self.over or self.paused:
             return
@@ -456,7 +456,7 @@ class Game:
             
     def drawRoadBackground(self):
         drawImage(self.UIBackground.forestBackground, 0, 0)
-        # Used ChatGPT to generate road background
+        # Rebecca and Indu used ChatGPT to generate road background and make it scroll
         for y in range(-40, 500, 20):
             offset = 10 if (y // 20) % 2 == 0 else 0
             for x in range(150 + offset, 350, 20):
@@ -533,9 +533,9 @@ class Game:
         if self.hole:
             self.hole.draw()
         self.player.draw()
-        for magnet in self.magnets:  # ChatGPT helped with this for loop
+        for magnet in self.magnets:  # ChatGPT helped with this for loop - Pranav
             magnet.draw()
-        if self.magnetActive:  # ChatGPT guided with the drawLabel 
+        if self.magnetActive:  # ChatGPT guided with the drawLabel - Pranav
             drawLabel(f'Magnet Effect Timer: {self.magnetEffectTimer//30}', 
                     80, 20, size=16, bold=True, fill='white')
         drawLabel(f'Score: {self.score}', 425, 20, 
@@ -571,7 +571,7 @@ class Game:
             self.drawActualGame()
 
 def onAppStart(app):
-    app.gameMode = 'main' # asked ChatGPT how to link the mazemode
+    app.gameMode = 'main' # Rebecca asked ChatGPT how to link the mazemode to game.py
     app.mainGame = Game(app)
     app.mazeGame = MazeGame(app)
 

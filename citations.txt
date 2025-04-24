@@ -18,7 +18,10 @@ ChatGPT provided guidance in terms of storing the game score and providing data 
 
 Rebecca:
 ChatGPT provided guidance for how to create sprite sheets and helped me write the code for the player sprites.
+This also included using ChatGPT for how to handle the jump sprite animations.
 Similarly, I used ChatGPT to provide guidance for how to integrate images into the code for my UI design.
+This also included how to import classes and connecting all files.
+
 
 Indu:
 Used YouTube (link in mazecopy.py) to learn about DFS algorithm and gain knowledge of how to create one
