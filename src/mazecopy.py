@@ -148,14 +148,33 @@ class MazePlayer: # indu created this
             return True
         return False
 
+    # main function for movement per frame
     def moveStep(self, app):
-        if not self.moveDirection: return
+        if not self.moveDirection:
+            return
         
-        self.facing = self.moveDirection  # Update facing direction
+        self.updateDirectionAndFrame()
+        
+        dx, dy, targetRow, targetCol = self.getMovementDeltas(app)
+        if not self.canMove(self.moveDirection, app.maze):
+            return
+
+        if (targetRow, targetCol) in app.maze.exits:
+            app.mazesSolved += 1
+            app.mazeGame.__init__(app)
+            return
+
+        self.performMovement(app, dx, dy, targetRow, targetCol)
+
+    # updates character's direction and animation
+    def updateDirectionAndFrame(self):
+        self.facing = self.moveDirection
         self.tick += 1
         if self.tick % 5 == 0:
             self.frameIndex = (self.frameIndex + 1) % self.frameCount
-        
+
+    # calculates delta based on direction and speed
+    def getMovementDeltas(self, app):
         w, h = getCellSize(app)
         dx = dy = 0
         if self.moveDirection == 'up': dy = -self.speed
@@ -163,28 +182,23 @@ class MazePlayer: # indu created this
         elif self.moveDirection == 'left': dx = -self.speed
         elif self.moveDirection == 'right': dx = self.speed
 
-        targetRow = self.row
-        targetCol = self.col
+        targetRow, targetCol = self.row, self.col
         if self.moveDirection == 'up': targetRow -= 1
-        if self.moveDirection == 'down': targetRow += 1
-        if self.moveDirection == 'left': targetCol -= 1
-        if self.moveDirection == 'right': targetCol += 1
+        elif self.moveDirection == 'down': targetRow += 1
+        elif self.moveDirection == 'left': targetCol -= 1
+        elif self.moveDirection == 'right': targetCol += 1
 
-        if not self.canMove(self.moveDirection, app.maze):
-            return
-        
-        if (targetRow, targetCol) in app.maze.exits:
-            app.mazesSolved += 1
-            app.mazeGame.__init__(app) # fixed this bug using ChatGPT
-            return
+        return dx, dy, targetRow, targetCol
 
+    # handles the physical movement of the character
+    def performMovement(self, app, dx, dy, targetRow, targetCol):
+        w, h = getCellSize(app)
         tx = app.boardLeft + targetCol * w + w / 2
         ty = app.boardTop + targetRow * h + h / 2
 
         if ((dx != 0 and abs(self.x + dx - tx) < self.speed) or
             (dy != 0 and abs(self.y + dy - ty) < self.speed)):
-            self.row = targetRow
-            self.col = targetCol
+            self.row, self.col = targetRow, targetCol
             self.updatePixelPosition(app)
             app.shortPath = app.pathSolv.findShortPath((self.row, self.col))
         else:
@@ -211,12 +225,9 @@ def getCellCenter(app, row, col):
 # indu wrote majority of the code
 class MazeGame:
     def __init__(self, app):
-        app.rows = 21
-        app.cols = 21
-        app.boardLeft = 50
-        app.boardTop = 50
-        app.boardWidth = 400
-        app.boardHeight = 400
+        app.rows, app.cols = 21, 21
+        app.boardLeft, app.boardTop = 50, 50
+        app.boardWidth, app.boardHeight = 400, 400
         app.cellBorderWidth = 1
 
         # Indu's Citation: ChatGPT after debugging app.mazesSolved problem
@@ -370,8 +381,7 @@ class MazeGame:
         zoomRows, zoomCols = 3, 3
         zoomW = app.width / 2 / zoomCols
         zoomH = app.height / zoomRows
-        xOffset = 0
-        yOffset = 0
+        xOffset, yOffset = 0, 0
 
         # Find the player’s cell
         playerRow = int(app.player.row)
