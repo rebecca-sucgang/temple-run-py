@@ -66,31 +66,40 @@ class MazeSolver: # indu created this
         self.exits = maze.exits
 
     def findShortPath(self, start):
+        # Create 2D list to track cells which were visited
         visited = [[False] * self.cols for i in range(self.rows)]
+        # Create 2D list to track the parent of each cell for reconstruction
         parent = [[None] * self.cols for j in range(self.rows)]
 
         # Inspired by (BFS): https://www.youtube.com/watch?v=W9F8fDQj7Ok&t=217s
+        # Initialize the path with the starting position
         path = [start]
         visited[start[0]][start[1]] = True
 
+        #BFS!
         while path:
+            # get current cells from the front of the queue
             row, col = path.pop(0)
+            # if cell is an exit, reconstruct path
             if (row, col) in self.exits:
-                path = []
+                path = [] 
+                # where reconstructing the path starts from
                 while (row, col) != start:
-                    path.append((row, col))
-                    row, col = parent[row][col]
-                path.append(start)
-                path.reverse()
+                    path.append((row, col)) # add curr cell to path
+                    row, col = parent[row][col] # move to the parent cell
+                path.append(start) # add starting point to the path
+                path.reverse() # reverse the path to get it from start to exit
                 return path
 
+            # explores the four neighboring cells
             for drow, dcol in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
                 newRow, newCol = row + drow, col + dcol
+                # checks legality and bound of the new cell (from ChatGPT)
                 if (0 <= newRow < self.rows and 0 <= newCol < self.cols and
                     self.grid[newRow][newCol] == 0 and 
                     not visited[newRow][newCol]):
-                    visited[newRow][newCol] = True
-                    parent[newRow][newCol] = (row, col)
+                    visited[newRow][newCol] = True # marks the cell as visited
+                    parent[newRow][newCol] = (row, col) # stores parent
                     path.append((newRow, newCol))
         return []  # No path found
     
@@ -249,7 +258,7 @@ class MazeGame:
         app.shortPath = app.pathSolv.findShortPath(
             (app.player.row, app.player.col))
 
-        # Citation: made quit button with chatGPT
+        # Citation: made quit + solve button with chatGPT
         app.quitButton = {'x': 308, 
                           'y': 202, 
                           'width': 60, 
@@ -263,7 +272,6 @@ class MazeGame:
 
     def onStep(self, app):
         app.player.moveStep(app)
-        # solve maze code
         if app.autoSolve and app.shortestPath:
             app.autoSolveCounter += 1
             if app.autoSolveCounter >= app.autoSolveDelay:
@@ -276,7 +284,6 @@ class MazeGame:
                     app.autoPathIndex += 1
                 else:
                     app.autoSolve = False
-        #solve maze code
 
     def onKeyPress(self, app, key):
         if key == 'r':
@@ -303,7 +310,6 @@ class MazeGame:
         by = app.quitButton['y'] + app.quitButton['height']
         if (app.quitButton['x'] <= x <= bx and app.quitButton['y'] <= y <= by):
             app.gameMode = 'main'
-        # Solve button
         solveX2 = app.solveButton['x'] + app.solveButton['width']
         solveY2 = app.solveButton['y'] + app.solveButton['height']
         if (app.solveButton['x'] <= x <= solveX2 and

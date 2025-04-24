@@ -18,14 +18,14 @@ Pranav Srinivas (pranavsr)
 - Included the magnetic powerup (with ChatGPT guidance)
 - Wrote code to retrieve the max score and most recent score
 - Wrote distance function to be incorporated into the code (to allow coin attraction when magnet is activated)
-- Worked on 2.5D graphics
+- Worked on 2.5D graphics -> during Hack112
 - Storyboarded
 
 
 Indu Arimilli (iarimill)
 - Wrote original game.py code (all the classes)
 - Made background
-- Worked on 2.5D Graphics
+- Worked on 2.5D Graphics - during Hack112
     Contributions (4/19):
     - Maze Generation Algorithm (maze.py)
     - DFS Pathfinding Algorithm
@@ -34,7 +34,7 @@ Indu Arimilli (iarimill)
 Rebecca Sucgang (rsucgang)
 - Created additional pages (how-to manual)
 - Helped debug code to make the code run like temple run
-- Worked on 2.5D Graphics
+- Worked on 2.5D Graphics - during Hack112
 - Storyboarded/Made prototypes
 - Worked on the overall UI for Temple Run (backgrounds, buttons, etc.)
 
