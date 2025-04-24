@@ -97,7 +97,8 @@ class Player:
 
     def draw(self): # the following code was guidance from ChatGPT
         if self.isJumping: # jumping sprite
-            spriteSheet = PILImage.open('src/images/sprites/jumpspritesheet.png')
+            spriteSheet = (PILImage.open(
+                'src/images/sprites/jumpspritesheet.png'))
             # Video I used to screenshot and create the player sprite sheet:
             # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.jumpFrameWidth
@@ -107,7 +108,8 @@ class Player:
             frameIndex = self.jumpFrameIndex
             left = frameIndex * frameWidth
         else: # runner sprite
-            spriteSheet = PILImage.open('src/images/sprites/runnerspritesheet.png')
+            spriteSheet = (PILImage.open(
+                'src/images/sprites/runnerspritesheet.png'))
             # Video I used to screenshot and create the player sprite sheet:
             # https://www.youtube.com/watch?v=fuQf-iGCmKA
             frameWidth = self.runnerFrameWidth
@@ -119,7 +121,8 @@ class Player:
 
         cropped = spriteSheet.crop((left, 0, left + frameWidth, frameHeight))
         resized = cropped.resize((displayWidth, displayHeight))
-        drawImage(CMUImage(resized), self.x - displayWidth // 2, self.y - displayHeight // 2)
+        drawImage((CMUImage(resized), self.x - displayWidth // 2, 
+                   self.y - displayHeight // 2))
 
     def getBounds(self):
         if self.isJumping: # check if jumping sprite
@@ -268,22 +271,21 @@ class Game:
         if not self.started or self.over or self.paused:
             return
 
-        self.update_player_state()
-        self.update_road_offset()
-        self.spawn_coins()
-        self.spawn_hole()
-        self.move_objects()
-        self.handle_coin_collisions()
-        self.cleanup_coins()
-        self.spawn_magnets()
-        self.handle_magnet_collisions()
-        self.cleanup_magnets()
-        self.check_hole_collision()
+        self.updatePlayerState()
+        self.updateRoadOffset()
+        self.spawnCoins()
+        self.spawnHole()
+        self.moveObjects()
+        self.handleCoinCollisions()
+        self.cleanupCoins()
+        self.spawnMagnets()
+        self.handleMagnetCollisions()
+        self.cleanupMagnets()
+        self.checkHoleCollision()
 
-    def handle_magnet_effect(self):
+    def handleMagnetEffect(self):
         self.magnetEffectTimer -= 1
         for coin in self.coins:
-            dx = self.player.x - coin.x
             dy = self.player.y - coin.y
             dist = distance(self.player.x, coin.x, self.player.y, coin.y)
             if dy <= 20:
@@ -294,18 +296,19 @@ class Game:
         if self.magnetEffectTimer <= 0:
             self.magnetActive = False
 
-    def update_player_state(self):
+    def updatePlayerState(self):
         self.player.updateAnimation()
         self.player.updateJump()
         self.speed = 5 + self.score // 15
 
-    def update_road_offset(self):
-        roadSpeed = self.roadSpeed * 0.5 if self.player.isJumping else self.roadSpeed
+    def updateRoadOffset(self):
+        roadSpeed = (self.roadSpeed * 0.5 if self.player.isJumping 
+                     else self.roadSpeed)
         self.roadOffset += roadSpeed
         if self.roadOffset >= 20:
             self.roadOffset -= 20
 
-    def spawn_coins(self):
+    def spawnCoins(self):
         if self.coinTimer <= 0:
             x = random.randint(150, 350)
             for i in range(5):
@@ -314,7 +317,7 @@ class Game:
         else:
             self.coinTimer -= 1
 
-    def spawn_hole(self):
+    def spawnHole(self):
         if self.hole is None and random.random() < 0.03:
             holeWidth = 100
             minX = 150
@@ -322,7 +325,7 @@ class Game:
             holeX = random.randint(minX, maxX)
             self.hole = Hole(holeX, 0)
 
-    def move_objects(self):
+    def moveObjects(self):
         for coin in self.coins:
             coin.move(self.speed)
         if self.hole:
@@ -330,7 +333,7 @@ class Game:
         for magnet in self.magnets:
             magnet.move(self.speed)
 
-    def handle_coin_collisions(self):
+    def handleCoinCollisions(self):
         playerBounds = self.player.getBounds()
         updatedCoins = []
         for coin in self.coins:
@@ -340,10 +343,10 @@ class Game:
                 updatedCoins.append(coin)
         self.coins = updatedCoins
 
-    def cleanup_coins(self):
+    def cleanupCoins(self):
         self.coins = [coin for coin in self.coins if coin.y < 500]
 
-    def spawn_magnets(self):
+    def spawnMagnets(self):
         if self.magnetTimer <= 0:
             if self.score >= 30 and self.score % 30 == 0:
                 x = random.randint(150, 350)
@@ -353,7 +356,7 @@ class Game:
         else:
             self.magnetTimer -= 1
 
-    def handle_magnet_collisions(self):
+    def handleMagnetCollisions(self):
         playerBounds = self.player.getBounds()
         updatedMagnets = []
         for magnet in self.magnets:
@@ -365,13 +368,14 @@ class Game:
                 updatedMagnets.append(magnet)
         self.magnets = updatedMagnets
 
-    def cleanup_magnets(self):
+    def cleanupMagnets(self):
         self.magnets = [magnet for magnet in self.magnets if magnet.y < 500]
 
-    def check_hole_collision(self):
+    def checkHoleCollision(self):
         if self.hole:
             playerBounds = self.player.getBounds()
-            if self.checkCollision(playerBounds, self.hole.getBounds(), player=self.player, checkForHole=True):
+            if (self.checkCollision(playerBounds, self.hole.getBounds(), 
+                                    player=self.player, checkForHole=True)):
                 self.over = True
                 self.scoreList.append(self.score)
                 self.recentScore = self.score
@@ -529,16 +533,17 @@ class Game:
         if self.hole:
             self.hole.draw()
         self.player.draw()
-        for magnet in self.magnets: # ChatGPT helped with this for loop
-                magnet.draw()
-        if self.magnetActive: # ChatGPT guided with the drawLabel 
+        for magnet in self.magnets:  # ChatGPT helped with this for loop
+            magnet.draw()
+        if self.magnetActive:  # ChatGPT guided with the drawLabel 
             drawLabel(f'Magnet Effect Timer: {self.magnetEffectTimer//30}', 
-                      80, 20, size = 16, bold=True, fill = 'white')
+                    80, 20, size=16, bold=True, fill='white')
         drawLabel(f'Score: {self.score}', 425, 20, 
-                    size=18, bold=True, fill="white")
+                size=18, bold=True, fill="white")
         drawImage(self.UIButton.pauseButton, 90, 433)
         drawImage(self.UIButton.backButton, 380, 433)
         self.drawSoundIcon()
+
 
     def draw(self):
         if self.tutorial:
