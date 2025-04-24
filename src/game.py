@@ -74,6 +74,9 @@ class Player:
                 # End jump
                 self.isJumping = False
                 self.jumpProgress = 0
+            maxY = 400
+            if self.y > maxY:
+                self.y = maxY
 
 
     def move(self, direction, speed):
@@ -153,7 +156,7 @@ class Hole:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.w = 60
+        self.w = 100
         self.h = 30
 
     def move(self, speed):
@@ -291,7 +294,12 @@ class Game:
             self.coinTimer -= 1
 
         if self.hole is None and random.random() < 0.03:
-            self.hole = Hole(random.randint(170, 310), 0)
+            holeWidth = 100
+            minX = 150
+            maxX = 350 - holeWidth
+            holeX = random.randint(minX, maxX)
+            self.hole = Hole(holeX, 0)
+
 
         for coin in self.coins:
             coin.move(self.speed)
