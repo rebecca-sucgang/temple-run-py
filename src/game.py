@@ -45,30 +45,36 @@ class Player:
         self.isJumping = False
         self.jumpFrameIndex = 0
         self.jumpFrameCount = 8
-        self.jumpHeight = 50
+        self.jumpHeight = 80
         self.jumpProgress = 0
-        self.jumpUpDuration = 8
-        self.jumpDownDuration = 8
+        self.jumpUpDuration = 12
+        self.jumpDownDuration = 12
         self.jumpTotalFrames = self.jumpUpDuration + self.jumpDownDuration
 
-    def startJump(self): # with help of ChatGPT
+    def startJump(self):  # with help of ChatGPT
         if not self.isJumping:
             self.isJumping = True
             self.jumpFrameIndex = 0
             self.jumpProgress = 0
     
-    def updateJump(self): # with help of ChatGPT
+    def updateJump(self):
         if self.isJumping:
             self.jumpFrameIndex = (self.jumpFrameIndex + 1) % self.jumpFrameCount
             self.jumpProgress += 1
 
+            totalJumpFrames = self.jumpUpDuration + self.jumpDownDuration
+
             if self.jumpProgress <= self.jumpUpDuration:
+                # Go up smoothly
                 self.y -= self.jumpHeight / self.jumpUpDuration
-            elif self.jumpProgress <= self.jumpTotalFrames:
+            elif self.jumpProgress <= totalJumpFrames + 1:
+                # Come down smoothly
                 self.y += self.jumpHeight / self.jumpDownDuration
             else:
+                # End jump
                 self.isJumping = False
                 self.jumpProgress = 0
+
 
     def move(self, direction, speed):
         if self.isJumping:
@@ -270,7 +276,8 @@ class Game:
         
         # gradually increase speed over time
         self.speed = 5 + self.score // 15
-        self.roadOffset += self.roadSpeed
+        roadSpeed = self.roadSpeed * 0.5 if self.player.isJumping else self.roadSpeed
+        self.roadOffset += roadSpeed
         if self.roadOffset >= 20:
             self.roadOffset -= 20
 
@@ -342,12 +349,11 @@ class Game:
 
         # player falls in hole
         if self.hole:
-            if self.checkCollision(playerBounds, self.hole.getBounds()):
+            if self.checkCollision(playerBounds, self.hole.getBounds(), player=self.player, checkForHole=True):
                 self.over = True
                 self.scoreList.append(self.score)
                 self.recentScore = self.score  # just to be sure (ChatGPT helped)
                 self.endGame()  # this saves the score to the file (ChatGPT helped)
-
             elif self.hole.y > 500:
                 self.hole = None
 
@@ -359,10 +365,16 @@ class Game:
         if self.started and not self.over:
             self.player.move(direction, self.speed)
 
-    def checkCollision(self, a, b):
+    def checkCollision(self, a, b, player=None, checkForHole=False):
         ax1, ay1, ax2, ay2 = a
         bx1, by1, bx2, by2 = b
+
+        # If the collision check is for a hole, and the player is jumping, skip collision
+        if checkForHole and player.isJumping and player is not None:
+            return False
+
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
+
     
     def returnMaxScore(self):  # pranav added this function (William Li, the TA guided)
         if self.scoreList == []:
@@ -489,11 +501,11 @@ class Game:
 
     def drawActualGame(self):
         self.drawRoadBackground()
-        self.player.draw()
         for coin in self.coins:
             coin.draw()
         if self.hole:
             self.hole.draw()
+        self.player.draw()
         for magnet in self.magnets: # ChatGPT helped with this for loop
                 magnet.draw()
         if self.magnetActive: # ChatGPT guided with the drawLabel part since it suggested frames initially, so it helped convert frames to seconds 
