@@ -173,7 +173,9 @@ class Magnet: # pranav
         self.x = x
         self.y = y
         self.size = 30
-        self.magentImages = CMUImage(PILImage.open('src/images/gamemagnet2.png').resize((self.size, self.size)))
+        self.magentImages = CMUImage(
+            PILImage.open('src/images/gamemagnet2.png').resize(
+                (self.size, self.size)))
         
     def move(self, speed):
         self.y += speed
@@ -182,7 +184,8 @@ class Magnet: # pranav
         drawImage(self.magentImages, self.x, self.y)
 
     def getBounds(self):
-        return (self.x - self.size, self.y - self.size, self.x + self.size, self.y + self.size)
+        return (self.x - self.size, self.y - self.size, 
+                self.x + self.size, self.y + self.size)
 
 class Game:
     def __init__(self, app):
@@ -222,9 +225,9 @@ class Game:
         self.coinTimer = 0
         self.roadOffset = 0 # vertical scroll for road
         self.roadSpeed = 2
-        self.magnetTimer = 0 # note this is only for spawning the magnet (inspired by chatGPT)
-        self.magnetActive = False # ChatGPT suggested this line 
-        self.magnetEffectTimer = 300 # note this marks the time the magnetic pulling coins effect lasts (AI helped)
+        self.magnetTimer = 0 
+        self.magnetActive = False 
+        self.magnetEffectTimer = 300 
 
     def start(self):
         self.reset()
@@ -259,38 +262,42 @@ class Game:
         self.musicPaused = not self.musicPaused
 
     def update(self):
-
-        if self.magnetActive == True: # ChatGPT provided guidance regarding this if statement and the lines within it
+        self.updateMagnetEffect()
+        if not self.started or self.over or self.paused:
+            return
+        self.updatePlayerState()
+        self.spawnObstacles()
+        self.updateObjects()
+        self.handleCollisions()
+        self.cleanupObjects()
+        self.checkHoleCollision()
+    
+    def updateMagnetEffect(self):
+        if self.magnetActive:
             self.magnetEffectTimer -= 1
             for coin in self.coins:
                 dx = self.player.x - coin.x
                 dy = self.player.y - coin.y
-                dist = distance(self.player.x, coin.x, self.player.y, coin.y) # I wrote this distance function earlier 
-                if dy <= 20: # if vertical distance between player and coin is less than or equal to 20
+                dist = distance(self.player.x, coin.x, self.player.y, coin.y)
+                if dy <= 20:
                     attractionSpeed = 6
-                    coin.x += dist*attractionSpeed
-                    coin.y += dist*attractionSpeed
+                    coin.x += dist * attractionSpeed
+                    coin.y += dist * attractionSpeed
                     self.score += 1
-
-            if self.magnetEffectTimer <= 0: # ChatGPT provided guidance for this if statement too!
+            if self.magnetEffectTimer <= 0:
                 self.magnetActive = False
-
-        if not self.started or self.over or self.paused:
-            return
-        
+    
+    def updatePlayerState(self):
         self.player.updateAnimation()
         self.player.updateJump()
-        
-        # gradually increase speed over time
         self.speed = 5 + self.score // 15
-        roadSpeed = self.roadSpeed * 0.5 if self.player.isJumping else self.roadSpeed
-        self.roadOffset += roadSpeed
+        self.roadOffset += self.roadSpeed * (0.5 if self.player.isJumping else 1)
         if self.roadOffset >= 20:
             self.roadOffset -= 20
-
-        # Generate coins in vertical columns on the road
+    
+    def spawnObstacles(self):
         if self.coinTimer <= 0:
-            x = random.randint(150, 350)  
+            x = random.randint(150, 350)
             for i in range(5):
                 self.coins.append(Coin(x, -i * 25))
             self.coinTimer = 40
@@ -298,74 +305,50 @@ class Game:
             self.coinTimer -= 1
 
         if self.hole is None and random.random() < 0.03:
-            holeWidth = 100
-            minX = 150
-            maxX = 350 - holeWidth
-            holeX = random.randint(minX, maxX)
+            holeX = random.randint(150, 250)  # 350 - 100
             self.hole = Hole(holeX, 0)
 
-
+        if self.magnetTimer <= 0 and self.score >= 30 and self.score % 30 == 0:
+            self.magnets.append(Magnet(random.randint(150, 350), random.randint(0, 400)))
+            self.magnetTimer = 40
+        else:
+            self.magnetTimer -= 1
+    
+    def updateObjects(self):
         for coin in self.coins:
             coin.move(self.speed)
         if self.hole:
             self.hole.move(self.speed)
-
-        for magnet in self.magnets: # ChatGPT helped with this for loop 
+        for magnet in self.magnets:
             magnet.move(self.speed)
 
+    def handleCollisions(self):
         playerBounds = self.player.getBounds()
 
-        # Check if player got coins
-        updatedCoins = []
-        for coin in self.coins:
-            if self.checkCollision(playerBounds, coin.getBounds()):
-                self.incrementScore()
-            else:
-                updatedCoins.append(coin)
+        self.coins = [coin for coin in self.coins 
+                    if not self.checkCollision(playerBounds, coin.getBounds()) or not self.incrementScore()]
 
-        # Remove coins that have gone off the screen 
-        validCoins = []
-        for coin in updatedCoins:
-            if coin.y < 500: # 500 is screen width 
-                validCoins.append(coin)  
-        # Adds coin to validCoins list
-        self.coins = validCoins
-
-        # Generate a magnet on the road (pranav)
-        if self.magnetTimer <= 0: 
-            if(self.score >= 30) and (self.score % 30 == 0): 
-                x = random.randint(150, 350)
-                y = random.randint(0, 400)
-                self.magnets.append(Magnet(x, y))
-                self.magnetTimer = 40
-        else:
-            self.magnetTimer -= 1
-
-        # Check if player got a magnet (pranav)
-        updatedMagnets = [] 
+        updatedMagnets = []
         for magnet in self.magnets:
-            if self.checkCollision(playerBounds, magnet.getBounds()): # ChatGPT helped with this line
+            if self.checkCollision(playerBounds, magnet.getBounds()):
                 self.incrementScore()
-                self.magnetActive = True # ChatGPT helped with this line
-                self.magnetEffectTimer = 300 # ChatGPT helped with this line
+                self.magnetActive = True
+                self.magnetEffectTimer = 300
             else:
                 updatedMagnets.append(magnet)
+        self.magnets = [m for m in updatedMagnets if m.y < 500]
 
-        # Remove magnets that have gone off the screen (pranav)
-        validMagnets = []
-        for magnet in updatedMagnets:
-            if magnet.y < 500: # 500 is screen width
-                validMagnets.append(magnet)
-        # Adds magnet to validMagnets list
-        self.magnets[:] = validMagnets
+    def cleanupObjects(self):
+        self.coins = [coin for coin in self.coins if coin.y < 500]
 
-        # player falls in hole
+    def checkHoleCollision(self):
         if self.hole:
-            if self.checkCollision(playerBounds, self.hole.getBounds(), player=self.player, checkForHole=True):
+            if self.checkCollision(self.player.getBounds(), self.hole.getBounds(), 
+                                player=self.player, checkForHole=True):
                 self.over = True
+                self.recentScore = self.score
                 self.scoreList.append(self.score)
-                self.recentScore = self.score  # just to be sure (ChatGPT helped)
-                self.endGame()  # this saves the score to the file (ChatGPT helped)
+                self.endGame()
             elif self.hole.y > 500:
                 self.hole = None
 
@@ -381,26 +364,26 @@ class Game:
         ax1, ay1, ax2, ay2 = a
         bx1, by1, bx2, by2 = b
 
-        # If the collision check is for a hole, and the player is jumping, skip collision
+        # If the collision check is for a hole, and the player is jumping
         if checkForHole and player.isJumping and player is not None:
             return False
 
         return not (ax2 < bx1 or ax1 > bx2 or ay2 < by1 or ay1 > by2)
 
     
-    def returnMaxScore(self):  # pranav added this function (William Li, the TA guided)
+    def returnMaxScore(self):  # pranav added this function 
         if self.scoreList == []:
             return None
         else:
             return max(self.scoreList)
         
-    def returnRecentScore(self): # pranav added this function (William Li, the TA guided)
+    def returnRecentScore(self): # pranav added this function 
         if self.scoreList == []:
             return None
         else:
             return (self.scoreList)[-1]
         
-    # added updated leaderboard by pranav (this was written with help of ChatGPT)
+    # added updated leaderboard by pranav (with the help of ChatGPT)
     def saveScoresToFile(self):
         if not hasattr(self, 'pastScores'):
             self.pastScores = []
