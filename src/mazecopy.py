@@ -3,7 +3,7 @@ from PIL import Image as PILImage
 from ui_assets import UIButton, UIMazeBlock
 import random
 
-class Maze: # indu created this
+class Maze: # indu created this class
     def __init__(self, rows, cols, extra_exits=2):
         self.rows = rows
         self.cols = cols
@@ -33,7 +33,7 @@ class Maze: # indu created this
                     self.grid[row + dr // 2][col + dc // 2] = 0
                     self.generateMaze(newRow, newCol)
 
-    def addExtraExits(self, count): # indu created this
+    def addExtraExits(self, count): 
         # Collect every wall cell on the border that sits next to (0)
         edges = []
         for r in range(1, self.rows - 1):
@@ -53,11 +53,11 @@ class Maze: # indu created this
             self.grid[r][c] = 0 # carves the exit
             self.exits.append((r, c)) # tracks the exit
 
-    def isPath(self, row, col): # indu created this
+    def isPath(self, row, col): 
         # helper: true if the cell is open basically
         return self.grid[row][col] == 0
 
-class MazeSolver: # indu created this
+class MazeSolver: # indu created this class as well
     def __init__(self, maze):
         self.maze = maze
         self.rows = maze.rows
@@ -103,7 +103,7 @@ class MazeSolver: # indu created this
                     path.append((newRow, newCol))
         return []  # No path found
     
-class MazePlayer: # indu created this
+class MazePlayer: # indu created the backend of this class as well
     def __init__(self, row, col):
         self.row = row
         self.col = col
@@ -122,6 +122,7 @@ class MazePlayer: # indu created this
         self.zoomDisplaySize = 45
         self.miniDisplaySize = 10
 
+        # rebecca made the sprites + all sprite functions
         self.sprites = {
             'up': PILImage.open('src/images/sprites/runup-removebg.png'),
             'down': PILImage.open('src/images/sprites/rundown-removebg.png'),
@@ -170,6 +171,7 @@ class MazePlayer: # indu created this
 
         if (targetRow, targetCol) in app.maze.exits:
             app.mazesSolved += 1
+            #this line is from ChatGPT debugging
             app.mazeGame.__init__(app)
             return
 
@@ -227,8 +229,7 @@ def getCellCenter(app, row, col):
     w, h = getCellSize(app)
     return x + w/2, y + h/2
 
-# overall citation for following code: 
-# ChatGPT just helped me to just organize the code into
+# ChatGPT helped connect the pages together after TA was unable to give help
 # a new MazeGame class in order to link this maze mode to game.py
 # rebecca worked on organizing the code and integrating the UI features
 # indu wrote majority of the code
@@ -264,9 +265,9 @@ class MazeGame:
                           'width': 60, 
                           'height': 25}
         app.solveButton = {'x': 382, 
-                    'y': 202,
-                    'width': 59,
-                    'height': 25}
+                           'y': 202,
+                           'width': 59,
+                           'height': 25}
         self.UIButton = UIButton()
         self.UIMazeBlock = UIMazeBlock()
 
@@ -287,6 +288,7 @@ class MazeGame:
 
     def onKeyPress(self, app, key):
         if key == 'r':
+            # from ChatGPT debugging
             self.__init__(app)
         elif key == '?':
             app.showPath = not app.showPath
