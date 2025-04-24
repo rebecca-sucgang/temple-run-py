@@ -196,6 +196,8 @@ class Game:
         self.music = Sound('sounds/templerunmusic.mp3')
         self.musicPaused = False
         self.music.play(loop=True)
+        self.monkeySound = Sound('sounds/monkeysoundeffect.mp3')
+        self.jumpSound = Sound('sounds/gruntjump.mp3')
 
         # code from pranav's leaderboard code (with help from ChatGPT)
         scores = loadScoresFromFile()
@@ -226,6 +228,8 @@ class Game:
 
     def start(self):
         self.reset()
+        self.started = True
+        self.monkeySound.play()
         self.started = True
 
     def instructions(self):
@@ -565,8 +569,9 @@ def onKeyPress(app, key):
     if app.gameMode == 'main':
         if (app.mainGame.started and not app.mainGame.over and not 
             app.mainGame.paused):
-            if key == 'up':
+            if key == 'up' and not app.mainGame.player.isJumping:
                 app.mainGame.player.startJump()
+                app.mainGame.jumpSound.play()
     elif app.gameMode == 'maze': # handles all key presses in maze mode
         app.mazeGame.onKeyPress(app, key)
 
