@@ -516,9 +516,9 @@ class Game:
         self.player.draw()
         for magnet in self.magnets: # ChatGPT helped with this for loop
                 magnet.draw()
-        if self.magnetActive: # ChatGPT guided with the drawLabel part since it suggested frames initially, so it helped convert frames to seconds 
-            drawLabel(f'Magnet Effect Timer:', 80, 20, size = 16, bold=True, fill = 'white')
-            drawLabel(f'{self.magnetEffectTimer//30} s', 80, 40, size = 16, bold=True, fill = 'white')
+        if self.magnetActive: # ChatGPT guided with the drawLabel 
+            drawLabel(f'Magnet Effect Timer: {self.magnetEffectTimer//30}', 
+                      80, 20, size = 16, bold=True, fill = 'white')
         drawLabel(f'Score: {self.score}', 425, 20, 
                     size=18, bold=True, fill="white")
         drawImage(self.UIButton.pauseButton, 90, 433)
@@ -552,7 +552,7 @@ class Game:
 
 def onAppStart(app):
     app.gameMode = 'main' # asked ChatGPT how to link the mazemode
-    app.mainGame = Game(app) # I needed to switch the app variable names to mainGame
+    app.mainGame = Game(app)
     app.mazeGame = MazeGame(app)
 
 def onStep(app):
@@ -563,7 +563,8 @@ def onStep(app):
 
 def onKeyPress(app, key):
     if app.gameMode == 'main':
-        if app.mainGame.started and not app.mainGame.over and not app.mainGame.paused:
+        if (app.mainGame.started and not app.mainGame.over and not 
+            app.mainGame.paused):
             if key == 'up':
                 app.mainGame.player.startJump()
     elif app.gameMode == 'maze': # handles all key presses in maze mode
@@ -572,7 +573,8 @@ def onKeyPress(app, key):
 def onKeyHold(app, keys):
     if app.gameMode == 'main':
         # cannot move player when paused
-        if app.mainGame.started and not app.mainGame.over and not app.mainGame.paused:
+        if (app.mainGame.started and not 
+            app.mainGame.over and not app.mainGame.paused):
             if 'left' in keys:
                 app.mainGame.movePlayer('left')
             if 'right' in keys:
@@ -589,7 +591,6 @@ def onMousePress(app, x, y):
         handleMainModeMousePress(app, x, y)
     elif app.gameMode == 'maze':
         app.mazeGame.onMousePress(app, x, y)
-
 
 def handleMainModeMousePress(app, x, y):
     if app.mainGame.started and not app.mainGame.over:
