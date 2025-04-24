@@ -30,6 +30,7 @@ Indu Arimilli (iarimill)
     - Maze Generation Algorithm (maze.py)
     - DFS Pathfinding Algorithm
     - Working on UI for maze generation algorithm 
+- Debugging game.py jumping algorithms (in the Player class (startJump + updateJump))
 
 Rebecca Sucgang (rsucgang)
 - Created additional pages (how-to manual)
@@ -37,4 +38,4 @@ Rebecca Sucgang (rsucgang)
 - Worked on 2.5D Graphics - during Hack112
 - Storyboarded/Made prototypes
 - Worked on the overall UI for Temple Run (backgrounds, buttons, sound effects, sprites, etc.)
-
+- Created ui_assets 
