@@ -3,12 +3,12 @@ from PIL import Image as PILImage
 from ui_assets import UIButton, UIMazeBlock
 import random
 
-class Maze:
+class Maze: # indu created this
     def __init__(self, rows, cols, extra_exits=2):
         self.rows = rows
         self.cols = cols
-        self.grid = [[1 for j in range(cols)] for _ in range(rows)]
-        self.visited = [[False for i in range(cols)] for _ in range(rows)]
+        self.grid = [[1 for j in range(cols)] for i in range(rows)]
+        self.visited = [[False for i in range(cols)] for j in range(rows)]
         self.start = (1, 1)
         self.end = (rows - 2, cols - 2)
         self.exits = [self.end]
@@ -33,7 +33,7 @@ class Maze:
                     self.grid[row + dr // 2][col + dc // 2] = 0
                     self.generateMaze(newRow, newCol)
 
-    def addExtraExits(self, count):
+    def addExtraExits(self, count): # indu created this
         # Collect every wall cell on the border that sits next to (0)
         edges = []
         for r in range(1, self.rows - 1):
@@ -53,11 +53,11 @@ class Maze:
             self.grid[r][c] = 0 # carves the exit
             self.exits.append((r, c)) # tracks the exit
 
-    def isPath(self, row, col):
+    def isPath(self, row, col): # indu created this
         # helper: true if the cell is open basically
         return self.grid[row][col] == 0
 
-class MazeSolver:
+class MazeSolver: # indu created this
     def __init__(self, maze):
         self.maze = maze
         self.rows = maze.rows
@@ -94,7 +94,7 @@ class MazeSolver:
                     path.append((newRow, newCol))
         return []  # No path found
     
-class MazePlayer:
+class MazePlayer: # indu created this
     def __init__(self, row, col):
         self.row = row
         self.col = col
@@ -124,7 +124,8 @@ class MazePlayer:
         spriteSheet = self.sprites[self.facing] # which direction in dictionary
         left = self.frameIndex * self.frameWidth
         top = 0
-        cropped = spriteSheet.crop((left, top, left + self.frameWidth, self.frameHeight))
+        cropped = spriteSheet.crop(
+            (left, top, left + self.frameWidth, self.frameHeight))
         resized = cropped.resize((displaySize, displaySize))
         return CMUImage(resized)
 
@@ -190,6 +191,7 @@ class MazePlayer:
             self.x += dx
             self.y += dy
 
+# indu created these
 def getCellSize(app):
     return (app.boardWidth / app.cols, app.boardHeight / app.rows)
 
@@ -202,8 +204,11 @@ def getCellCenter(app, row, col):
     w, h = getCellSize(app)
     return x + w/2, y + h/2
 
-# overall citation for following code: ChatGPT helped me to just organize the code into
+# overall citation for following code: 
+# ChatGPT just helped me to just organize the code into
 # a new MazeGame class in order to link this maze mode to game.py
+# rebecca worked on organizing the code and integrating the UI features
+# indu wrote majority of the code
 class MazeGame:
     def __init__(self, app):
         app.rows = 21
@@ -214,7 +219,7 @@ class MazeGame:
         app.boardHeight = 400
         app.cellBorderWidth = 1
 
-        # Citation: ChatGPT after debugging app.mazesSolved problem
+        # Indu's Citation: ChatGPT after debugging app.mazesSolved problem
         app.mazesSolved = getattr(app, 'mazesSolved', 0)
 
         app.maze = Maze(app.rows, app.cols, extra_exits=3)
@@ -223,13 +228,15 @@ class MazeGame:
         app.pathSolv = MazeSolver(app.maze)
 
         app.autoSolve = False
-        app.shortestPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
+        app.shortestPath = app.pathSolv.findShortPath(
+            (app.player.row, app.player.col))
         app.autoPathIndex = 0
         app.autoSolveDelay = 5
         app.autoSolveCounter = 0
 
         app.showPath = False
-        app.shortPath = app.pathSolv.findShortPath((app.player.row, app.player.col))
+        app.shortPath = app.pathSolv.findShortPath(
+            (app.player.row, app.player.col))
 
         # Citation: made quit button with chatGPT
         app.quitButton = {'x': 308, 
@@ -298,10 +305,13 @@ class MazeGame:
         self.drawMaze(app)
         self.drawMazeInstructions()
         if app.showPath:
-            self.drawShortestPathMiniMaze(app, 250, 250, 250 / app.rows, 250 / app.cols)
+            self.drawShortestPathMiniMaze(app, 250, 250, 
+                                          250 / app.rows, 
+                                          250 / app.cols)
         self.drawQuitButton(app)
         self.drawSolveButton(app)
-        drawLabel(f"{app.mazesSolved}", 440, 183, fill="white", size=20, bold=True)
+        drawLabel(f"{app.mazesSolved}", 440, 183, 
+                  fill="white", size=20, bold=True)
 
     def drawMazeInstructions(self):
         drawImage(self.UIMazeBlock.mazeInstructions, 250, 0)
@@ -317,11 +327,13 @@ class MazeGame:
 
     #solve maze code
     def drawSolveButton(self, app):
-        drawRect(app.solveButton['x'], app.solveButton['y'], app.solveButton['width'], 
-                app.solveButton['height'], fill='green')
-        drawLabel("SOLVE", app.solveButton['x'] + app.solveButton['width'] / 2, 
-                app.solveButton['y'] + app.solveButton['height'] / 2, 
-                font='Arial 16 bold', fill='white')
+        drawRect(app.solveButton['x'], app.solveButton['y'], 
+                 app.solveButton['width'], app.solveButton['height'], 
+                 fill='green')
+        drawLabel("SOLVE", 
+                  app.solveButton['x'] + app.solveButton['width'] / 2, 
+                  app.solveButton['y'] + app.solveButton['height'] / 2, 
+                  font='Arial 16 bold', fill='white')
     #solve maze code
 
     # Full maze at bottom-right (250x250)
@@ -336,18 +348,22 @@ class MazeGame:
                 x = xOffset + col * cellW
                 y = yOffset + row * cellH
                 if (row, col) in app.maze.exits:
-                    drawImage(self.UIMazeBlock.mazeEndImage, x, y, width=cellW, height=cellH)
+                    drawImage(self.UIMazeBlock.mazeEndImage, x, y, 
+                              width=cellW, height=cellH)
                 elif app.maze.grid[row][col] == 1:
-                    drawImage(self.UIMazeBlock.mazeBorderImage, x, y, width=cellW, height=cellH)
+                    drawImage(self.UIMazeBlock.mazeBorderImage, x, y, 
+                              width=cellW, height=cellH)
                 else:
-                    drawImage(self.UIMazeBlock.mazePathImage, x, y, width=cellW, height=cellH)
+                    drawImage(self.UIMazeBlock.mazePathImage, x, y, 
+                              width=cellW, height=cellH)
         
         # Player in mini maze
         pr, pc = int(app.player.row), int(app.player.col)
         cx = xOffset + pc * cellW + cellW / 2
         cy = yOffset + pr * cellH + cellH / 2
         frame = app.player.getCurrentFrame(app.player.miniDisplaySize)
-        drawImage(frame, cx - app.player.miniDisplaySize // 2, cy - app.player.miniDisplaySize // 2)
+        drawImage(frame, cx - app.player.miniDisplaySize // 2, 
+                  cy - app.player.miniDisplaySize // 2)
 
     # Zoomed-in 3x3 view on the left half (250x500)
     def drawMazeZoomed(self, app):
@@ -374,29 +390,42 @@ class MazeGame:
                 x = xOffset + j * zoomW
                 y = yOffset + i * zoomH
                 if (row, col) in app.maze.exits:
-                    drawImage(self.UIMazeBlock.mazeEndImage, x, y, width=zoomW, height=zoomH)
+                    drawImage(self.UIMazeBlock.mazeEndImage, x, y, 
+                              width=zoomW, height=zoomH)
                 elif app.maze.grid[row][col] == 1:
-                    drawImage(self.UIMazeBlock.mazeBorderImage, x, y, width=zoomW, height=zoomH)
+                    drawImage(self.UIMazeBlock.mazeBorderImage, x, y, 
+                              width=zoomW, height=zoomH)
                 else:
-                    drawImage(self.UIMazeBlock.mazePathImage, x, y, width=zoomW, height=zoomH)
+                    drawImage(self.UIMazeBlock.mazePathImage, x, y, 
+                              width=zoomW, height=zoomH)
 
                 # Draw red path dot if applicable
                 if app.showPath and (row, col) in app.shortPath:
-                    drawCircle(x + zoomW/2, y + zoomH/2, min(zoomW, zoomH)//5, fill='red')
-        self.drawPlayerZoomed(app, startRow, startCol, zoomW, zoomH, xOffset, yOffset)
+                    drawCircle(x + zoomW/2, y + zoomH/2, 
+                               min(zoomW, zoomH)//5, fill='red')
+        self.drawPlayerZoomed(app, startRow, startCol, 
+                              zoomW, zoomH, xOffset, yOffset)
 
     # Draw player in zoomed view
-    def drawPlayerZoomed(self, app, startRow, startCol, zoomW, zoomH, xOffset, yOffset):
+    def drawPlayerZoomed(self, app, startRow, startCol, 
+                         zoomW, zoomH, xOffset, yOffset):
         pr, pc = int(app.player.row), int(app.player.col)
         i = pr - startRow
         j = pc - startCol
         if 0 <= i < 3 and 0 <= j < 3:
             frame = app.player.getCurrentFrame(app.player.zoomDisplaySize)
-            drawImage(frame, xOffset + j * zoomW + (zoomW - app.player.zoomDisplaySize) // 2, yOffset + i * zoomH + (zoomH - app.player.zoomDisplaySize) // 2)
+            drawImage(frame, 
+                      xOffset + j * zoomW + 
+                      (zoomW - app.player.zoomDisplaySize) // 2, 
+                      yOffset + i * zoomH + 
+                      (zoomH - app.player.zoomDisplaySize) // 2)
 
     # Draw the shortest path on the mini maze 
-    def drawShortestPathMiniMaze(self, app, xOffset, yOffset, cellW, cellH):
+    def drawShortestPathMiniMaze(self, app, xOffset, 
+                                 yOffset, cellW, cellH):
         for (r, c) in app.shortPath:
             x = xOffset + c * cellW
             y = yOffset + r * cellH
-            drawRect(x + 2, y + 2, cellW - 4, cellH - 4, fill=None, border='red', borderWidth=2)
+            drawRect(x + 2, y + 2, 
+                     cellW - 4, cellH - 4, 
+                     fill=None, border='red', borderWidth=2)
