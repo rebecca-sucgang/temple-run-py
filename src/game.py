@@ -262,40 +262,50 @@ class Game:
         self.musicPaused = not self.musicPaused
 
     def update(self):
-        self.updateMagnetEffect()
+        if self.magnetActive:
+            self.handle_magnet_effect()
+
         if not self.started or self.over or self.paused:
             return
-        self.updatePlayerState()
-        self.spawnObstacles()
-        self.updateObjects()
-        self.handleCollisions()
-        self.cleanupObjects()
-        self.checkHoleCollision()
-    
-    def updateMagnetEffect(self):
-        if self.magnetActive:
-            self.magnetEffectTimer -= 1
-            for coin in self.coins:
-                dx = self.player.x - coin.x
-                dy = self.player.y - coin.y
-                dist = distance(self.player.x, coin.x, self.player.y, coin.y)
-                if dy <= 20:
-                    attractionSpeed = 6
-                    coin.x += dist * attractionSpeed
-                    coin.y += dist * attractionSpeed
-                    self.score += 1
-            if self.magnetEffectTimer <= 0:
-                self.magnetActive = False
-    
-    def updatePlayerState(self):
+
+        self.update_player_state()
+        self.update_road_offset()
+        self.spawn_coins()
+        self.spawn_hole()
+        self.move_objects()
+        self.handle_coin_collisions()
+        self.cleanup_coins()
+        self.spawn_magnets()
+        self.handle_magnet_collisions()
+        self.cleanup_magnets()
+        self.check_hole_collision()
+
+    def handle_magnet_effect(self):
+        self.magnetEffectTimer -= 1
+        for coin in self.coins:
+            dx = self.player.x - coin.x
+            dy = self.player.y - coin.y
+            dist = distance(self.player.x, coin.x, self.player.y, coin.y)
+            if dy <= 20:
+                attractionSpeed = 6
+                coin.x += dist * attractionSpeed
+                coin.y += dist * attractionSpeed
+                self.score += 1
+        if self.magnetEffectTimer <= 0:
+            self.magnetActive = False
+
+    def update_player_state(self):
         self.player.updateAnimation()
         self.player.updateJump()
         self.speed = 5 + self.score // 15
-        self.roadOffset += self.roadSpeed * (0.5 if self.player.isJumping else 1)
+
+    def update_road_offset(self):
+        roadSpeed = self.roadSpeed * 0.5 if self.player.isJumping else self.roadSpeed
+        self.roadOffset += roadSpeed
         if self.roadOffset >= 20:
             self.roadOffset -= 20
-    
-    def spawnObstacles(self):
+
+    def spawn_coins(self):
         if self.coinTimer <= 0:
             x = random.randint(150, 350)
             for i in range(5):
@@ -304,17 +314,15 @@ class Game:
         else:
             self.coinTimer -= 1
 
+    def spawn_hole(self):
         if self.hole is None and random.random() < 0.03:
-            holeX = random.randint(150, 250)  # 350 - 100
+            holeWidth = 100
+            minX = 150
+            maxX = 350 - holeWidth
+            holeX = random.randint(minX, maxX)
             self.hole = Hole(holeX, 0)
 
-        if self.magnetTimer <= 0 and self.score >= 30 and self.score % 30 == 0:
-            self.magnets.append(Magnet(random.randint(150, 350), random.randint(0, 400)))
-            self.magnetTimer = 40
-        else:
-            self.magnetTimer -= 1
-    
-    def updateObjects(self):
+    def move_objects(self):
         for coin in self.coins:
             coin.move(self.speed)
         if self.hole:
@@ -322,12 +330,31 @@ class Game:
         for magnet in self.magnets:
             magnet.move(self.speed)
 
-    def handleCollisions(self):
+    def handle_coin_collisions(self):
         playerBounds = self.player.getBounds()
+        updatedCoins = []
+        for coin in self.coins:
+            if self.checkCollision(playerBounds, coin.getBounds()):
+                self.incrementScore()
+            else:
+                updatedCoins.append(coin)
+        self.coins = updatedCoins
 
-        self.coins = [coin for coin in self.coins 
-                    if not self.checkCollision(playerBounds, coin.getBounds()) or not self.incrementScore()]
+    def cleanup_coins(self):
+        self.coins = [coin for coin in self.coins if coin.y < 500]
 
+    def spawn_magnets(self):
+        if self.magnetTimer <= 0:
+            if self.score >= 30 and self.score % 30 == 0:
+                x = random.randint(150, 350)
+                y = random.randint(0, 400)
+                self.magnets.append(Magnet(x, y))
+                self.magnetTimer = 40
+        else:
+            self.magnetTimer -= 1
+
+    def handle_magnet_collisions(self):
+        playerBounds = self.player.getBounds()
         updatedMagnets = []
         for magnet in self.magnets:
             if self.checkCollision(playerBounds, magnet.getBounds()):
@@ -336,21 +363,22 @@ class Game:
                 self.magnetEffectTimer = 300
             else:
                 updatedMagnets.append(magnet)
-        self.magnets = [m for m in updatedMagnets if m.y < 500]
+        self.magnets = updatedMagnets
 
-    def cleanupObjects(self):
-        self.coins = [coin for coin in self.coins if coin.y < 500]
+    def cleanup_magnets(self):
+        self.magnets = [magnet for magnet in self.magnets if magnet.y < 500]
 
-    def checkHoleCollision(self):
+    def check_hole_collision(self):
         if self.hole:
-            if self.checkCollision(self.player.getBounds(), self.hole.getBounds(), 
-                                player=self.player, checkForHole=True):
+            playerBounds = self.player.getBounds()
+            if self.checkCollision(playerBounds, self.hole.getBounds(), player=self.player, checkForHole=True):
                 self.over = True
-                self.recentScore = self.score
                 self.scoreList.append(self.score)
+                self.recentScore = self.score
                 self.endGame()
             elif self.hole.y > 500:
                 self.hole = None
+
 
     def incrementScore(self):
         self.score += 1
