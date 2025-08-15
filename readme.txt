@@ -1,7 +1,7 @@
 Project Title: Temple Run Lite
 
 Description:
-This is Temple Run Lite, a Python game based on "Temple Run", using object-oriented programming and top-down design. 
+This is Temple Run Lite, a Python game based on "Temple Run", using object-oriented programming and top-down design. This game include JSON data handling to store and manage player metrics securely, a random maze-generation feature using the Breadth-First Search algorithm, and interactive UI and sprite animations using CMU Graphics.
 
 Requirements:
 Python 3.11.0
